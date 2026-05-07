@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
@@ -8,7 +8,8 @@ db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
 
-def create_app (config_class = Config):
+
+def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
@@ -16,14 +17,27 @@ def create_app (config_class = Config):
     migrate.init_app(app, db)
     jwt.init_app(app)
 
-    from app import models #noqa: F401
+    @jwt.unauthorized_loader
+    def missing_token_callback(reason):
+        return jsonify({"error": "authentication required"}), 401
+
+
+    @jwt.invalid_token_loader
+    def invalid_token_callback(reason):
+        return jsonify({"error": "invalid token"}), 401
+
+
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        return jsonify({"error": "token expired"}), 401
+
+    from app import models  # noqa: F401
     from app.routes import auth_bp
 
     app.register_blueprint(auth_bp)
 
     @app.route("/health")
     def health():
-        return {"status":"ok"}
+        return {"status": "ok"}
 
     return app
-
