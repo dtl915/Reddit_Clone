@@ -33,8 +33,10 @@ def create_app(config_class=Config):
 
     from app import models  # noqa: F401
     from app.routes import auth_bp
-
+    from app.routes import communities_bp
+    
     app.register_blueprint(auth_bp)
+    app.register_blueprint(communities_bp)
 
     @app.route("/health")
     def health():

@@ -18,4 +18,12 @@ class Community(db.Model):
     creator_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)
     created_at = db.Column(db.DateTime, default= datetime.utcnow, nullable= False)
 
+    def to_dict(self):
+        return {
+            "id":self.id,
+            "name":self.name,
+            "description":self.description,
+            "creator_id":self.creator_id,
+            "created_at":self.created_at.isoformat(),
+        }
 
