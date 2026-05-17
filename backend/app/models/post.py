@@ -28,3 +28,14 @@ class Post(db.Model):
         db.Index("ix_posts_community_score","community_id","score"),
         db.Index("ix_posts_author_created", "author_id", "created_at"),
     )
+
+    def to_dict(self):
+        return {
+            "id":self.id,
+            "community_id":self.community_id,
+            "author_id":self.author_id,
+            "title":self.title,
+            "content":self.content,
+            "score":self.score,
+            "created_at":self.created_at,
+        }

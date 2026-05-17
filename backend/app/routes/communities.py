@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required, JWTManager, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
-from app.models import Community, User
+from app.models import Community, User, Post
 from sqlalchemy.exc import IntegrityError
 bp = Blueprint("communities", __name__, url_prefix="/communities")
 
@@ -26,6 +26,7 @@ def create_community():
         db.session.add(community)
         db.session.commit()
     except IntegrityError:
+        db.session.rollback()
         return jsonify({"error": "the name of this community already taken"}), 409
     return jsonify(community.to_dict()), 201
     
@@ -47,8 +48,14 @@ def delete_community(community_id):
     community = Community.query.get_or_404(community_id)
 
     if user_id != community.creator_id:
-        return jsonify({"error":"you do not have the permission do delete this community"}), 400
+        return jsonify({"error":"you do not have the permission to delete this community"}), 400
     
     db.session.delete(community)
     db.session.commit()
     return "", 204
+
+@bp.route("/<int:community_id>/posts", methods=["GET"])
+def get_posts(community_id):
+    community = Community.query.get_or_404(community_id)
+    posts = Post.query.filter_by(community_id=community_id).all()
+    return jsonify([post.to_dict() for post in posts])

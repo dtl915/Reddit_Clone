@@ -8,6 +8,17 @@ db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
 
+def import_bp(app):
+    from app import models  # noqa: F401
+    from app.routes import auth_bp
+    from app.routes import communities_bp
+    from app.routes import posts_bp
+
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(communities_bp)
+    app.register_blueprint(posts_bp)
+
+
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -31,12 +42,15 @@ def create_app(config_class=Config):
     def expired_token_callback(jwt_header, jwt_payload):
         return jsonify({"error": "token expired"}), 401
 
-    from app import models  # noqa: F401
-    from app.routes import auth_bp
-    from app.routes import communities_bp
+    @app.errorhandler(404)
+    def not_found(e):
+        return jsonify({"error":"not found"}), 404
     
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(communities_bp)
+    @app.errorhandler(405)
+    def method_not_allowed(e):
+        return jsonify({"error":"method not allowed"}), 405
+
+    import_bp(app)
 
     @app.route("/health")
     def health():
