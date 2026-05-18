@@ -31,3 +31,14 @@ class Comment(db.Model):
         db.Index("ix_comments_post", "post_id"),
         db.Index("ix_comments_author_created", "author_id", "created_at"),
     )
+
+    def to_dict(self):
+        return {
+            "id" : self.id,
+            "author_id": self.author_id,
+            "parent_id": self.parent_id,
+            "post_id": self.post_id,
+            "content": self.content,
+            "score": self.score,
+            "created_at": self.created_at,
+        }

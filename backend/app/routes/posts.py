@@ -1,16 +1,17 @@
 from flask import request, Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
-from app.models import Community, Post, User
+from app.models import Community, Post, User, Comment
 from sqlalchemy.exc import IntegrityError
 
 bp = Blueprint("posts",__name__, url_prefix="/posts")
 
 @bp.route("/", methods = ["POST"])
+@jwt_required()
 def create_post():
     data = request.get_json(silent=True) or {}
     community_id = data.get("community_id")
-    author_id = data.get("author_id")
+    author_id = int(get_jwt_identity())
     title = data.get("title")
     content = data.get("content")
     if community_id is None:
@@ -47,3 +48,9 @@ def delete_post(post_id):
     return "", 204
 
 
+@bp.route("/<int:post_id>/comments", methods = ["GET"])
+def get_comments(post_id):
+    post = Post.query.get_or_404(post_id)
+    comments = Comment.query.filter_by(post_id = post_id).order_by(Comment.created_at.asc()).all()
+    return jsonify([comment.to_dict() for comment in comments]), 200
+    

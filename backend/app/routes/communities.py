@@ -57,5 +57,5 @@ def delete_community(community_id):
 @bp.route("/<int:community_id>/posts", methods=["GET"])
 def get_posts(community_id):
     community = Community.query.get_or_404(community_id)
-    posts = Post.query.filter_by(community_id=community_id).all()
+    posts = Post.query.filter_by(community_id=community_id).order_by(Post.created_at.desc()).all()
     return jsonify([post.to_dict() for post in posts])
