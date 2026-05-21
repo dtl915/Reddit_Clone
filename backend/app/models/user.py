@@ -16,3 +16,15 @@ class User(db.Model):
     password_hash = db.Column(db.String, nullable = False)
     created_at = db.Column(db.DateTime, default= datetime.utcnow, nullable =False)
 
+    def to_dict(self):
+        return {
+            "id":self.id,
+            "username":self.username,
+            "created_at":self.created_at,
+        }
+    
+    def to_dict_private(self):
+        return {
+            **self.to_dict(),
+            "email":self.email,
+        }

@@ -13,11 +13,12 @@ def import_bp(app):
     from app.routes import auth_bp
     from app.routes import communities_bp
     from app.routes import posts_bp
+    from app.routes import comment_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(communities_bp)
     app.register_blueprint(posts_bp)
-
+    app.register_blueprint(comment_bp)
 
 
 def create_app(config_class=Config):
