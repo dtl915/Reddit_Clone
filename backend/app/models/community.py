@@ -1,6 +1,6 @@
 from app import db
 from datetime import datetime
-
+from sqlalchemy.orm import joinedload
 class Community(db.Model):
 
     """
@@ -9,6 +9,7 @@ class Community(db.Model):
     - description: a brief description of this community
     - creator_id: the id of the user who created this community
     - created_at: the date that this community is being created
+    - creator: the creator of this community
     """
 
     __tablename__ = "communities"
@@ -17,6 +18,11 @@ class Community(db.Model):
     description = db.Column(db.Text)
     creator_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)
     created_at = db.Column(db.DateTime, default= datetime.utcnow, nullable= False)
+    creator = db.relationship("User")
+
+    @classmethod
+    def get_or_404(cls,community_id):
+        return cls.query.options(joinedload(cls.creator)).get_or_404(community_id)
 
     def to_dict(self):
         return {
@@ -25,5 +31,5 @@ class Community(db.Model):
             "description":self.description,
             "creator_id":self.creator_id,
             "created_at":self.created_at.isoformat(),
+            "creator": self.creator.username,
         }
-

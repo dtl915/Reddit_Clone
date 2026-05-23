@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
 from app.models import Community, Post, User, Comment, PostVote
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import joinedload
 
 bp = Blueprint("posts",__name__, url_prefix="/posts")
 
@@ -22,7 +23,7 @@ def create_post():
         return jsonify({"error":'title is empty'}),400
 
     author = User.query.get_or_404(author_id)
-    community = Community.query.get_or_404(community_id)
+    community = Community.get_or_404(community_id)
     post = Post(community_id = community_id, author_id = author_id, title=title, content = content)
 
     db.session.add(post)
@@ -31,14 +32,14 @@ def create_post():
 
 @bp.route("/<int:post_id>", methods = ["GET"])
 def get_post(post_id):
-    post = Post.query.get_or_404(post_id)
+    post = Post.get_or_404(post_id)
     return jsonify(post.to_dict()), 200
 
 @bp.route("/<int:post_id>", methods = ["DELETE"])
 @jwt_required()
 def delete_post(post_id):
     user_id = int(get_jwt_identity())
-    post = Post.query.get_or_404(post_id)
+    post = Post.get_or_404(post_id)
 
     if user_id != post.author_id:
         return jsonify({"error", "you do not have the permission to delete this post"}), 400
@@ -50,8 +51,8 @@ def delete_post(post_id):
 
 @bp.route("/<int:post_id>/comments", methods = ["GET"])
 def get_comments(post_id):
-    post = Post.query.get_or_404(post_id)
-    comments = Comment.query.filter_by(post_id = post_id).order_by(Comment.created_at.asc()).all()
+    post = Post.get_or_404(post_id)
+    comments = Comment.query.options(joinedload(Comment.author)).filter_by(post_id = post_id).order_by(Comment.created_at.asc()).all()
     return jsonify([comment.to_dict() for comment in comments]), 200
     
 
@@ -69,7 +70,7 @@ def post_vote(post_id):
 
     # value = int(value)
 
-    post = Post.query.get_or_404(post_id)
+    post = Post.get_or_404(post_id)
     user_id = get_jwt_identity()
     user = User.query.get_or_404(user_id)
     vote = PostVote.query.filter_by(user_id=user_id, post_id=post_id).first()
@@ -88,3 +89,9 @@ def post_vote(post_id):
             db.session.delete(vote)
         db.session.commit()
         return jsonify({"score":post.score}), 200
+
+
+@bp.route("/", methods = ["GET"])
+def get_recent_posts(): # limit = 25
+    posts = Post.query.options(joinedload(Post.community), joinedload(Post.author)).order_by(Post.created_at.desc()).limit(25).all()
+    return jsonify([post.to_dict() for post in posts]), 200

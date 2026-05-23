@@ -1,6 +1,6 @@
 from app import db 
 from datetime import datetime
-
+from sqlalchemy.orm import joinedload
 class Post(db.Model):
 
     """
@@ -11,6 +11,8 @@ class Post(db.Model):
     - content: content of this post, is nullable
     - score: the number of upvotes - the number of downvotes of this post
     - created_at: the date of this post is being created
+    - community: the community this post belong to
+    - author: the author of this post
     """
 
     __tablename__ = "posts"
@@ -22,12 +24,18 @@ class Post(db.Model):
     content = db.Column(db.Text)
     score = db.Column(db.Integer, default = 0, nullable=False)
     created_at = db.Column(db.DateTime, default = datetime.utcnow, nullable=False)
+    community = db.relationship("Community")
+    author = db.relationship("User")
 
     __table_args__ = (
         db.Index("ix_posts_community_created", "community_id","created_at"),
         db.Index("ix_posts_community_score","community_id","score"),
         db.Index("ix_posts_author_created", "author_id", "created_at"),
     )
+
+    @classmethod
+    def get_or_404(cls, post_id):
+        return cls.query.options(joinedload(cls.author), joinedload(cls.community)).get_or_404(post_id)
 
     def to_dict(self):
         return {
@@ -37,5 +45,7 @@ class Post(db.Model):
             "title":self.title,
             "content":self.content,
             "score":self.score,
-            "created_at":self.created_at,
+            "created_at":self.created_at.isoformat(),
+            "community": self.community.name,
+            "author": self.author.username,
         }

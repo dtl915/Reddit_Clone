@@ -1,10 +1,10 @@
-function App() {
+import { Routes, Route } from "react-router-dom";
+import { Home } from "./pages/Home";
+
+export function App() {
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-blue-600">Reddit Clone</h1>
-      <p className="mt-2 text-gray-700">Frontend skeleton works.</p>
-    </div>
+    <Routes>
+      <Route path="/" element = {<Home />} />
+    </Routes>
   );
 }
-
-export default App;

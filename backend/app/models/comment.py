@@ -1,6 +1,6 @@
 from app import db
 from datetime import datetime
-
+from sqlalchemy.orm import joinedload
 
 class Comment(db.Model):
 
@@ -12,6 +12,7 @@ class Comment(db.Model):
     - content: content of this comment
     - score: number of upvote - number of downvote
     - created_at: the date this comment is created
+    - author: the author of this comment
     """
 
 
@@ -26,6 +27,7 @@ class Comment(db.Model):
     score = db.Column(db.Integer, default=0, nullable=False)
     created_at = db.Column(
         db.DateTime, default=datetime.utcnow, nullable=False)
+    author = db.relationship("User")
 
     __table_args__ = (
         db.Index("ix_comments_post", "post_id"),
@@ -40,5 +42,10 @@ class Comment(db.Model):
             "post_id": self.post_id,
             "content": self.content,
             "score": self.score,
-            "created_at": self.created_at,
+            "created_at": self.created_at.isoformat(),
+            "author": self.author.username,
         }
+        
+    @staticmethod
+    def get_or_404(cls,comment_id):
+        return cls.query.options(joinedload(cls.author)).get_or_404(comment_id)

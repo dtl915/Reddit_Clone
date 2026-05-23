@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
 from app.models import Community, User, Post
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import joinedload
 bp = Blueprint("communities", __name__, url_prefix="/communities")
 
 @bp.route("/", methods = ["POST"])
@@ -38,14 +39,14 @@ def list_communities():
 
 @bp.route("/<int:community_id>", methods=["GET"])
 def get_community(community_id):
-    community = Community.query.get_or_404(community_id)  
+    community = Community.get_or_404(community_id)  
     return jsonify(community.to_dict())
 
 @bp.route("/<int:community_id>", methods=["DELETE"])
 @jwt_required()
 def delete_community(community_id):
     user_id = int(get_jwt_identity())
-    community = Community.query.get_or_404(community_id)
+    community = Community.get_or_404(community_id)
 
     if user_id != community.creator_id:
         return jsonify({"error":"you do not have the permission to delete this community"}), 400
@@ -56,6 +57,6 @@ def delete_community(community_id):
 
 @bp.route("/<int:community_id>/posts", methods=["GET"])
 def get_posts(community_id):
-    community = Community.query.get_or_404(community_id)
-    posts = Post.query.filter_by(community_id=community_id).order_by(Post.created_at.desc()).all()
+    community = Community.get_or_404(community_id)
+    posts = Post.query.options(joinedload(Post.community), joinedload(Post.author)).filter_by(community_id=community_id).order_by(Post.created_at.desc()).all()
     return jsonify([post.to_dict() for post in posts])

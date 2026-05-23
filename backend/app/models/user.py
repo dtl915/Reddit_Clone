@@ -20,7 +20,7 @@ class User(db.Model):
         return {
             "id":self.id,
             "username":self.username,
-            "created_at":self.created_at,
+            "created_at":self.created_at.isoformat(),
         }
     
     def to_dict_private(self):
