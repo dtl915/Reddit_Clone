@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c ' *)",
+      "Bash(.venv/bin/pip list *)",
+      "Bash(.venv/bin/pip uninstall *)",
+      "Bash(.venv/bin/pip install *)",
+      "Bash(.venv/bin/python -c \"import bcrypt; print\\('OK', bcrypt.__file__\\); print\\(bcrypt.hashpw\\(b'test', bcrypt.gensalt\\(\\)\\)\\)\")"
+    ]
+  }
+}

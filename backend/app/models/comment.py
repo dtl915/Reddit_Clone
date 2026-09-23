@@ -2,8 +2,8 @@ from app import db
 from datetime import datetime
 from sqlalchemy.orm import joinedload
 
-class Comment(db.Model):
 
+class Comment(db.Model):
     """
     - id: unique id of this comment
     - author_id: the user id of the author
@@ -15,18 +15,15 @@ class Comment(db.Model):
     - author: the author of this comment
     """
 
-
     __tablename__ = "comments"
 
     id = db.Column(db.Integer, primary_key=True)
-    author_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     parent_id = db.Column(db.Integer, db.ForeignKey("comments.id"))
     post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False)
     content = db.Column(db.Text, nullable=False)
     score = db.Column(db.Integer, default=0, nullable=False)
-    created_at = db.Column(
-        db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     author = db.relationship("User")
 
     __table_args__ = (
@@ -36,7 +33,7 @@ class Comment(db.Model):
 
     def to_dict(self):
         return {
-            "id" : self.id,
+            "id": self.id,
             "author_id": self.author_id,
             "parent_id": self.parent_id,
             "post_id": self.post_id,
@@ -45,7 +42,7 @@ class Comment(db.Model):
             "created_at": self.created_at.isoformat(),
             "author": self.author.username,
         }
-        
-    @staticmethod
-    def get_or_404(cls,comment_id):
+
+    @classmethod
+    def get_or_404(cls, comment_id):
         return cls.query.options(joinedload(cls.author)).get_or_404(comment_id)
