@@ -1,5 +1,7 @@
 # Python
 venv/
+.venv/
+
 __pycache__/
 *.pyc
 *.pyo
@@ -13,3 +15,5 @@ __pycache__/
 
 # OS
 .DS_Store
+
+PROJECT_STATUS.md
