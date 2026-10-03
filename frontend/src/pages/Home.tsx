@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { getFeed } from "../api/posts";
+import { formatDate } from "../utils/formatDate";
+import { formatContent } from "../utils/formatContent"
 import type { Post } from "../types";
 
 export function Home() {
@@ -38,6 +40,8 @@ export function Home() {
             <>
                 <div key={post.id}>{post.title}</div>
                 <div>{post.author}</div>
+                <div>{formatDate(post.created_at)}</div>
+                <div>{formatContent(post.content)}</div>
                 <br />
             </>
         )}
