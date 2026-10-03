@@ -64,7 +64,7 @@ def delete_community(community_id):
         )
 
     for post in Post.query.filter_by(community_id=community.id):
-        db.session.delete(post)
+        post.delete_cascade()
 
     db.session.delete(community)
     db.session.commit()

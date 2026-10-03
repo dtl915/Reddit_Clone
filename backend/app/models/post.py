@@ -37,6 +37,13 @@ class Post(db.Model):
     def get_or_404(cls, post_id):
         return cls.query.options(joinedload(cls.author), joinedload(cls.community)).get_or_404(post_id)
 
+    def delete_cascade(self):
+        from app.models.comment import Comment
+
+        for comment in Comment.query.filter_by(post_id=self.id):
+            db.session.delete(comment)
+        db.session.delete(self)
+
     def to_dict(self):
         return {
             "id":self.id,

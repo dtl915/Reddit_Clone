@@ -52,10 +52,7 @@ def delete_post(post_id):
             400,
         )
 
-    for comment in Comment.query.filter_by(post_id=post.id):
-        db.session.delete(comment)
-
-    db.session.delete(post)
+    post.delete_cascade()
     db.session.commit()
     return "", 204
 
