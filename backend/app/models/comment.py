@@ -43,6 +43,17 @@ class Comment(db.Model):
             "author": self.author.username,
         }
 
+    def delete_cascade(self):
+        from app.models.vote import CommentVote
+
+        for comment in Comment.query.filter_by(parent_id=self.id):
+            comment.delete_cascade()
+
+        for comment_vote in CommentVote.query.filter_by(comment_id=self.id):
+            comment_vote.delete_cascade()
+        db.session.delete(self)
+        db.session.commit()
+
     @classmethod
     def get_or_404(cls, comment_id):
         return cls.query.options(joinedload(cls.author)).get_or_404(comment_id)
