@@ -12,6 +12,8 @@ export function Home() {
             try {
                 const data = await getFeed();
                 setPosts(data);
+                console.log(data);
+                console.log(posts);
             } catch (error) {
                 setError(error instanceof Error ? error.message : "Unknown Error");
             } finally {
@@ -27,8 +29,18 @@ export function Home() {
         return <div>{error}</div>
     if (posts.length === 0)
         return <div>No posts yet.</div>
+
+    /*
+    TODO: HTML element of title and author is to be changed into links
+     */
     return <div>
-        {posts.map((post) => <div key={post.id}>{post.title}</div>)}
+        {posts.map((post) =>
+            <>
+                <div key={post.id}>{post.title}</div>
+                <div>{post.author}</div>
+                <br />
+            </>
+        )}
     </div>
 
 }

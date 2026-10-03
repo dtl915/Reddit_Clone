@@ -13,20 +13,20 @@ export interface Community {
     name: string;
     description: string | null;
     creator_id: number;
-    creator_username: string;
+    creator: string;
     created_at: string;
 }
 
 export interface Post {
     id: number;
+    community_id: number;
+    author_id: number;
     title: string;
     content: string;
-    community_id: number;
-    community_name: string;
-    author_id: number;
-    author_username: string;
     score: number;
     created_at: string;
+    community: string;
+    author: string;
 }
 
 export interface Comment {
@@ -35,7 +35,7 @@ export interface Comment {
     parent_id: number | null;
     post_id: number;
     author_id: number;
-    author_username: string;
+    author: string;
     score: number;
     created_at: string;
 }
