@@ -4,24 +4,26 @@ from app import db
 from app.models import Community, User, Post
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
+
 bp = Blueprint("communities", __name__, url_prefix="/communities")
 
-@bp.route("/", methods = ["POST"])
+
+@bp.route("/", methods=["POST"])
 @jwt_required()
 def create_community():
     data = request.get_json(silent=True) or {}
     creator_id = get_jwt_identity()
-    creator = User.query.filter_by(id = creator_id).first()
+    creator = User.query.filter_by(id=creator_id).first()
     name = data.get("name")
     description = data.get("description")
 
     if creator is None:
-        return jsonify({"error":"account not found"}), 400
+        return jsonify({"error": "account not found"}), 400
 
     if name is None:
-        return jsonify({"error":"name cannot be empty"}), 400
-    
-    community = Community(name = name, description = description, creator_id = creator.id )
+        return jsonify({"error": "name cannot be empty"}), 400
+
+    community = Community(name=name, description=description, creator_id=creator.id)
 
     try:
         db.session.add(community)
@@ -30,17 +32,22 @@ def create_community():
         db.session.rollback()
         return jsonify({"error": "the name of this community already taken"}), 409
     return jsonify(community.to_dict()), 201
-    
 
-@bp.route("/", methods = ["GET"])
+
+@bp.route("/", methods=["GET"])
 def list_communities():
     communities = Community.query.all()
-    return jsonify([community.to_dict() for ind, community in enumerate(communities)]), 200
+    return (
+        jsonify([community.to_dict() for ind, community in enumerate(communities)]),
+        200,
+    )
+
 
 @bp.route("/<int:community_id>", methods=["GET"])
 def get_community(community_id):
-    community = Community.get_or_404(community_id)  
+    community = Community.get_or_404(community_id)
     return jsonify(community.to_dict())
+
 
 @bp.route("/<int:community_id>", methods=["DELETE"])
 @jwt_required()
@@ -49,14 +56,28 @@ def delete_community(community_id):
     community = Community.get_or_404(community_id)
 
     if user_id != community.creator_id:
-        return jsonify({"error":"you do not have the permission to delete this community"}), 400
-    
+        return (
+            jsonify(
+                {"error": "you do not have the permission to delete this community"}
+            ),
+            400,
+        )
+
+    for post in Post.query.filter_by(community_id=community.id):
+        db.session.delete(post)
+
     db.session.delete(community)
     db.session.commit()
     return "", 204
 
+
 @bp.route("/<int:community_id>/posts", methods=["GET"])
 def get_posts(community_id):
     community = Community.get_or_404(community_id)
-    posts = Post.query.options(joinedload(Post.community), joinedload(Post.author)).filter_by(community_id=community_id).order_by(Post.created_at.desc()).all()
+    posts = (
+        Post.query.options(joinedload(Post.community), joinedload(Post.author))
+        .filter_by(community_id=community_id)
+        .order_by(Post.created_at.desc())
+        .all()
+    )
     return jsonify([post.to_dict() for post in posts])
