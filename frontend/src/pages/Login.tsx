@@ -13,13 +13,14 @@ export function Login() {
         return <div>Loading...</div>
 
     return <div>
+        <title>Login</title>
         <form action={async (formData: FormData) => {
             setLoading(true);
             const email = formData.get("email");
             const password = formData.get("password");
 
             if (typeof email !== "string" || typeof password !== "string") {
-                return
+                throw TypeError
             }
 
             try {
@@ -34,12 +35,15 @@ export function Login() {
                 setLoading(false);
             }
         }}>
-            <label> Username:</label>
+            <label> Email:</label>
             <input type="text" id="email" name="email" />
             <label> Password: </label>
             <input type="text" id="password" name="password" />
             <button type="submit">Login</button>
 
         </form>
+        <button onClick={() => {
+            navigate("/auth/register")
+        }}>Doesn't Have an Account? Register Now!</button>
     </div>
 }

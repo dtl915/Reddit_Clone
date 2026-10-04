@@ -38,6 +38,7 @@ export function Home() {
     return <div>
         {posts.map((post) =>
             <>
+                <title>Home Page</title>
                 <div key={post.id}>{post.title}</div>
                 <div>{post.author}</div>
                 <div>{formatDate(post.created_at)}</div>

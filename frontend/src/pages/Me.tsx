@@ -1,3 +1,6 @@
 export function Me() {
-    return <div>You Logged In!</div>
+    return <div>
+        <title>Me</title>
+        <div>You Logged In!</div>
+    </div>
 }
