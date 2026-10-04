@@ -1,4 +1,7 @@
 export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+    console.log("Fetching:");
+    console.log(path);
+    console.log(options);
     const url: string = import.meta.env.VITE_API_URL + path;
     const token: string | null = localStorage.getItem("token");
     const headers: Record <string, string> = {
@@ -6,6 +9,8 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
         ... (options?.headers as Record <string, string>),
         ...(token? {"Authorization" : `Bearer ${token}`} : {}),
     };
+
+    console.log({...options, headers});
 
     
     const response = await fetch(url, {...options, headers});

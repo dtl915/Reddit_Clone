@@ -8,6 +8,10 @@ export interface CurrentUser extends User {
     email: string;
 }
 
+export interface JWT {
+    access_token : string;
+}
+
 export interface Community {
     id: number;
     name: string;
