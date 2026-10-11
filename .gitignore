@@ -1,0 +1,20 @@
+# dependencies / builds
+node_modules/
+dist/
+
+# secrets
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# editors / tools
+.vscode/*
+!.vscode/extensions.json
+.claude/
+.mcp.json
+.DS_Store
