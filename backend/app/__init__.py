@@ -1,13 +1,15 @@
+import os
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
-from config import Config
+from config import CONFIGS
 from flask_cors import CORS
 
 db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
+
 
 def import_bp(app):
     from app import models  # noqa: F401
@@ -22,7 +24,11 @@ def import_bp(app):
     app.register_blueprint(comment_bp)
 
 
-def create_app(config_class=Config):
+def create_app(config_class=None):
+
+    if config_class is None:
+        config_class = CONFIGS[os.environ.get("APP_ENV", "developnent")]
+
     app = Flask(__name__)
     app.config.from_object(config_class)
     app.url_map.strict_slashes = False
@@ -31,16 +37,14 @@ def create_app(config_class=Config):
     migrate.init_app(app, db)
     jwt.init_app(app)
     CORS(app)
-    
+
     @jwt.unauthorized_loader
     def missing_token_callback(reason):
         return jsonify({"error": "authentication required"}), 401
 
-
     @jwt.invalid_token_loader
     def invalid_token_callback(reason):
         return jsonify({"error": "invalid token"}), 401
-
 
     @jwt.expired_token_loader
     def expired_token_callback(jwt_header, jwt_payload):
@@ -48,11 +52,11 @@ def create_app(config_class=Config):
 
     @app.errorhandler(404)
     def not_found(e):
-        return jsonify({"error":"not found"}), 404
-    
+        return jsonify({"error": "not found"}), 404
+
     @app.errorhandler(405)
     def method_not_allowed(e):
-        return jsonify({"error":"method not allowed"}), 405
+        return jsonify({"error": "method not allowed"}), 405
 
     import_bp(app)
 
