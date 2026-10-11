@@ -3,6 +3,7 @@ import { getFeed } from "../api/posts";
 import { formatDate } from "../utils/formatDate";
 import { formatContent } from "../utils/formatContent"
 import type { Post } from "../types";
+import "./Home.css";
 
 export function Home() {
     const [posts, setPosts] = useState<Post[]>([]);
@@ -26,25 +27,26 @@ export function Home() {
     }, []);
 
     if (loading)
-        return <div>Loading...</div>
+        return <div className="home-status">Loading...</div>
     if (error)
-        return <div>{error}</div>
+        return <div className="home-status home-error">{error}</div>
     if (posts.length === 0)
-        return <div>No posts yet.</div>
+        return <div className="home-status">No posts yet.</div>
 
     /*
     TODO: HTML element of title and author is to be changed into links
      */
-    return <div>
+    return <div className="home-page">
+        <title>Home Page</title>
         {posts.map((post) =>
-            <>
-                <title>Home Page</title>
-                <div key={post.id}>{post.title}</div>
-                <div>{post.author}</div>
-                <div>{formatDate(post.created_at)}</div>
-                <div>{formatContent(post.content)}</div>
-                <br />
-            </>
+            <div key={post.id} className="post-card">
+                <div className="post-title">{post.title}</div>
+                <div className="post-meta">
+                    <span className="post-author">{post.author}</span>
+                    <span>{formatDate(post.created_at)}</span>
+                </div>
+                <div className="post-content">{formatContent(post.content)}</div>
+            </div>
         )}
     </div>
 
