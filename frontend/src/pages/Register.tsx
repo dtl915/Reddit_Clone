@@ -28,13 +28,15 @@ export function Register() {
 
                     const data = await register(username, email, password);
 
-                    const access_token = await getJWT(email, password);
-                    if (access_token.access_token) {
-                        localStorage.setItem("token", access_token.access_token)
+                    const tokenRes = await getJWT(email, password);
+                    if (tokenRes.access_token) {
+                        localStorage.setItem("token", tokenRes.access_token)
                         navigate("/auth/me")
+                    } else {
+                        throw new Error("Login failed after registration");
                     }
                 } catch (error) {
-                    setError(error instanceof Error ? error.message : "Unknown Error");
+                    setError("Account created, but automatic login failed. Please log in.");
                 } finally {
                     setLoading(false);
                 }
