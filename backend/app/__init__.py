@@ -3,7 +3,7 @@ from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
-from config import CONFIGS
+from config import get_config, Config
 from flask_cors import CORS
 
 db = SQLAlchemy()
@@ -24,10 +24,12 @@ def import_bp(app):
     app.register_blueprint(comment_bp)
 
 
-def create_app(config_class=None):
+def create_app(config_class: type[Config] | None = None):
 
-    if config_class is None:
-        config_class = CONFIGS[os.environ.get("APP_ENV", "developnent")]
+    if not config_class:
+        config_class = get_config(os.environ.get("APP_ENV"))
+
+    config_class.check_env()
 
     app = Flask(__name__)
     app.config.from_object(config_class)
