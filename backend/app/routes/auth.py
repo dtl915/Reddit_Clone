@@ -56,7 +56,13 @@ def login():
     email = data.get("email")
     password = data.get("password")
 
-    if not all([email, password]):
+    payload = [email, password]
+
+    if (
+        password is None
+        or email is None
+        or not all([isinstance(field, str) and field.strip() for field in payload])
+    ):
         return jsonify({"error": "email or password cannot be empty"}), 400
 
     user = User.query.filter_by(email=email).first()
