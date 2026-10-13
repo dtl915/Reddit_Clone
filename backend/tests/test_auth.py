@@ -23,7 +23,9 @@ def test_register_successed(client: FlaskClient):
 
 @pytest.mark.parametrize("field", ["username", "email", "password"])
 @pytest.mark.parametrize(
-    "bad_value", [MISSING, "", "   "], ids=["missing", "empty", "whitespace"]
+    "bad_value",
+    [MISSING, "", "   ", 123],
+    ids=["missing", "empty", "whitespace", "wrong_type"],
 )
 def test_register_rejects_bad_field(client: FlaskClient, field, bad_value):
     username = "test" if field != "username" else bad_value
@@ -69,3 +71,47 @@ def test_register_rejects_duplicate(client: FlaskClient, field):
     assert response.status_code == 409
     assert data["error"] == "username or email already taken"
     assert "password" not in data and "password_hash" not in data
+
+
+def test_login_with_correct_pw(client: FlaskClient, registered_user: dict[str, str]):
+    response = client.post("/auth/login", json=registered_user)
+
+    data = response.get_json()
+
+    assert response.status_code == 200
+
+
+@pytest.mark.parametrize("fields", ["email", "password"])
+def test_login_with_wrong_fields(
+    client: FlaskClient, registered_user: dict[str, str], fields
+):
+    registered_user[fields] = "wrong_val"
+
+    response = client.post("/auth/login", json=registered_user)
+    data = response.get_json()
+
+    assert response.status_code == 401
+    assert data["error"] == "invalid account or password"
+
+
+@pytest.mark.parametrize("fields", ["email", "password"])
+@pytest.mark.parametrize(
+    "bad_value",
+    [MISSING, "", "    ", 123],
+    ids=["missing", "empty", "whitespace", "wrong_type"],
+)
+def test_login_with_empty_fields(
+    client: FlaskClient, registered_user: dict[str, str], fields, bad_value
+):
+
+    if bad_value is MISSING:
+        del registered_user[fields]
+    else:
+        registered_user[fields] = bad_value
+
+    response = client.post("/auth/login", json=registered_user)
+
+    data = response.get_json()
+
+    assert response.status_code == 400
+    assert data["error"] == "email or password cannot be empty"

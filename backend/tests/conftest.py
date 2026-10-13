@@ -1,5 +1,6 @@
 import pytest
 from flask import Flask
+from flask.testing import FlaskClient
 from collections.abc import Iterator
 from app import create_app, db
 from config import TestingConfig
@@ -32,5 +33,39 @@ def clean_db(app):
 
 
 @pytest.fixture
-def client(app):
+def client(app: Flask) -> FlaskClient:
     return app.test_client()
+
+
+@pytest.fixture(scope="function")
+def registered_user(client: FlaskClient):
+    username = "test"
+    email = "test@example.com"
+    password = "test-password"
+    response = client.post(
+        "/auth/register",
+        json={"username": username, "email": email, "password": password},
+    )
+
+    assert response.status_code == 201
+
+    data = response.get_json()
+
+    info = {
+        "username": data["username"],
+        "email": data["email"],
+        "password": password,
+        "ID": data["ID"],
+    }
+
+    return info
+
+
+@pytest.fixture(scope="function")
+def auth_headers(client: FlaskClient, registered_user: dict[str, str]):
+    response = client.post("/auth/login", json=registered_user)
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    return {"Authorization": f"Bearer {data["access_token"]}"}
