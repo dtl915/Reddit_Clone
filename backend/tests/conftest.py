@@ -55,7 +55,7 @@ def registered_user(client: FlaskClient):
         "username": data["username"],
         "email": data["email"],
         "password": password,
-        "ID": data["ID"],
+        "id": data["id"],
     }
 
     return info
