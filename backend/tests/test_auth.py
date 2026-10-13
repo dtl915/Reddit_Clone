@@ -91,7 +91,7 @@ def test_login_with_wrong_fields(
     data = response.get_json()
 
     assert response.status_code == 401
-    assert data["error"] == "invalid account or password"
+    assert data["error"] == "invalid email or password"
 
 
 @pytest.mark.parametrize("fields", ["email", "password"])

@@ -68,14 +68,14 @@ def login():
     user = User.query.filter_by(email=email).first()
 
     if user is None:
-        return jsonify({"error": "the account doesn't exist"}), 401
+        return jsonify({"error": "invalid email or password"}), 401
 
     hashed_pw = user.password_hash
     if bc.checkpw(password.encode("utf-8"), hashed_pw.encode("utf-8")):
         token = create_access_token(identity=str(user.id))
         return jsonify({"access_token": token}), 200
     else:
-        return jsonify({"error": "invalid password"}), 401
+        return jsonify({"error": "invalid email or password"}), 401
 
 
 @bp.route("/me", methods=["GET"])
