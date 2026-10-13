@@ -1,5 +1,9 @@
 import pytest
 from flask.testing import FlaskClient
+from flask import Flask
+from app import db
+from app.models import User
+from sqlalchemy import text
 
 MISSING = object()
 
@@ -17,7 +21,7 @@ def test_register_successed(client: FlaskClient):
 
     assert response.status_code == 201
     assert data["username"] == username and data["email"] == email
-    assert "ID" in data
+    assert "id" in data
     assert "password" not in data and "password_hash" not in data
 
 
@@ -79,6 +83,7 @@ def test_login_with_correct_pw(client: FlaskClient, registered_user: dict[str, s
     data = response.get_json()
 
     assert response.status_code == 200
+    assert "access_token" in data
 
 
 @pytest.mark.parametrize("fields", ["email", "password"])
@@ -115,3 +120,42 @@ def test_login_with_empty_fields(
 
     assert response.status_code == 400
     assert data["error"] == "email or password cannot be empty"
+
+
+def test_route_me_with_correct_auth(
+    client: FlaskClient, registered_user: dict, auth_headers: dict
+):
+    response = client.get("/auth/me", headers=auth_headers)
+    data = response.get_json()
+    assert response.status_code == 200
+    assert registered_user["id"] == data["id"]
+    assert registered_user["username"] == data["username"]
+    assert registered_user["email"] == data["email"]
+
+
+def test_route_me_with_no_header(client: FlaskClient):
+    response = client.get("/auth/me")
+    data = response.get_json()
+    assert response.status_code == 401
+    assert data["error"] == "authentication required"
+
+
+def test_route_me_with_invalid_auth(client: FlaskClient):
+    response = client.get("/auth/me", headers={"Authorization": "Bearer invalidauth"})
+    data = response.get_json()
+    assert response.status_code == 401
+    assert data["error"] == "invalid token"
+
+
+def test_route_me_with_missing_user(
+    app: Flask, client: FlaskClient, registered_user: dict, auth_headers: dict
+):
+    with app.app_context():
+        user = db.session.get(User, registered_user["id"])
+        db.session.delete(user)
+        db.session.commit()
+
+    response = client.get("/auth/me", headers=auth_headers)
+    data = response.get_json()
+    assert response.status_code == 401
+    assert data["error"] == "the account doesn't exist"
