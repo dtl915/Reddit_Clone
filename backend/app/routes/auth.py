@@ -46,7 +46,7 @@ def register():
         db.session.rollback()
         return jsonify({"error": "username or email already taken"}), 409
 
-    return jsonify({"ID": user.id, "username": user.username, "email": user.email}), 201
+    return jsonify({"id": user.id, "username": user.username, "email": user.email}), 201
 
 
 @bp.route("/login", methods=["POST"])
