@@ -122,6 +122,17 @@ def test_login_with_empty_fields(
     assert data["error"] == "email or password cannot be empty"
 
 
+def test_login_with_space_at_email_end(
+    client: FlaskClient, registered_user: dict[str, str]
+):
+    registered_user["email"] = registered_user["email"] + "   "
+    response = client.post("/auth/login", json=registered_user)
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert "access_token" in data
+
+
 def test_route_me_with_correct_auth(
     client: FlaskClient, registered_user: dict, auth_headers: dict
 ):
