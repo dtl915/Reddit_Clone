@@ -18,8 +18,6 @@ def create_post():
     content = data.get("content")
     if community_id is None:
         return jsonify({"error": "community_id is empty"}), 400
-    if author_id is None:
-        return jsonify({"error": "author_id is empty"}), 400
     if title is None:
         return jsonify({"error": "title is empty"}), 400
 
