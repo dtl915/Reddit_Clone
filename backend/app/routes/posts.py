@@ -21,9 +21,6 @@ def create_post():
     if title is None:
         return jsonify({"error": "title is empty"}), 400
 
-    author = User.query.get(author_id)
-    if author is None:
-        return jsonify({"error": "the account doesn't exist"}), 401
     community = Community.query.get_or_404(community_id)
     post = Post(
         community_id=community_id, author_id=author_id, title=title, content=content
@@ -49,7 +46,7 @@ def delete_post(post_id):
     if user_id != post.author_id:
         return (
             jsonify({"error": "you do not have the permission to delete this post"}),
-            400,
+            403,
         )
 
     post.delete_cascade()
