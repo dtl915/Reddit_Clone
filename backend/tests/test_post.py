@@ -97,3 +97,50 @@ def test_create_post_with_removed_author(
 
     assert response.status_code == 401
     assert response.get_json()["error"] == "the account doesn't exist"
+
+
+def test_get_post_with_correct_id(client: FlaskClient, post: dict):
+    response = client.get(f"/posts/{post["id"]}")
+    assert response.status_code == 200
+    assert post == response.get_json()
+
+
+def test_get_post_with_wrong_id(client: FlaskClient):
+    response = client.get(f"/posts/9999")
+    assert response.status_code == 404
+
+
+def test_delete_existing_post(client: FlaskClient, post: dict, user: dict):
+    response = client.delete(f"/posts/{post["id"]}", headers=user["headers"])
+    assert response.status_code == 204
+
+
+def test_delete_post_with_invalid_id(client: FlaskClient, user: dict):
+    response = response = client.delete(f"/posts/9999", headers=user["headers"])
+    assert response.status_code == 404
+
+
+def test_delete_post_with_missing_header(client: FlaskClient):
+    response = client.delete(f"/posts/1")
+    assert response.status_code == 401
+    assert response.get_json()["error"] == "authentication required"
+
+
+def test_delete_post_with_invalid_header(client: FlaskClient):
+    response = client.delete(
+        f"/posts/1", headers={"Authorization": "Bearer wrong_token"}
+    )
+    assert response.status_code == 401
+    assert response.get_json()["error"] == "invalid token"
+
+
+def test_delete_post_with_wrong_user(
+    client: FlaskClient, post: dict, make_user: Callable[[str], dict]
+):
+    other = make_user("other")
+    response = client.delete(f"/posts/{post['id']}", headers=other["headers"])
+    assert response.status_code == 400
+    assert (
+        response.get_json()["error"]
+        == "you do not have the permission to delete this post"
+    )
