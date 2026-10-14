@@ -52,6 +52,16 @@ def create_app(config_class: type[Config] | None = None):
     def expired_token_callback(jwt_header, jwt_payload):
         return jsonify({"error": "token expired"}), 401
 
+    @jwt.user_lookup_loader
+    def user_lookup(jwt_header, jwt_data):
+        from app.models import User
+
+        return db.session.get(User, int(jwt_data["sub"]))
+
+    @jwt.user_lookup_error_loader
+    def user_lookup_callback(jwt_header, jwt_data):
+        return {"error": "the account doesn't exist"}, 401
+
     @app.errorhandler(404)
     def not_found(e):
         return jsonify({"error": "not found"}), 404
