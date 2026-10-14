@@ -48,7 +48,7 @@ def delete_post(post_id):
 
     if user_id != post.author_id:
         return (
-            jsonify({"error", "you do not have the permission to delete this post"}),
+            jsonify({"error": "you do not have the permission to delete this post"}),
             400,
         )
 
