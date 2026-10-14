@@ -4,7 +4,7 @@ from flask_jwt_extended import (
     JWTManager,
     create_access_token,
     jwt_required,
-    get_jwt_identity,
+    current_user,
 )
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
@@ -81,9 +81,14 @@ def login():
 @bp.route("/me", methods=["GET"])
 @jwt_required()
 def me():
-    user_identity = get_jwt_identity()
-    user = User.query.filter_by(id=user_identity).first()
-    if user is None:
-        return jsonify({"error": "the account doesn't exist"}), 401
 
-    return jsonify({"id": user.id, "username": user.username, "email": user.email}), 200
+    return (
+        jsonify(
+            {
+                "id": current_user.id,
+                "username": current_user.username,
+                "email": current_user.email,
+            }
+        ),
+        200,
+    )

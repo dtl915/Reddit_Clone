@@ -1,5 +1,5 @@
 from flask import jsonify, request, Blueprint
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, current_user
 from sqlalchemy.exc import IntegrityError
 from app.models import User, Community, Post, Comment, CommentVote
 from app import db
@@ -11,7 +11,7 @@ bp = Blueprint("comments", __name__, url_prefix="/comments")
 @jwt_required()
 def create_comment():
     data = request.get_json(silent=True) or {}
-    author_id = int(get_jwt_identity())
+    author_id = int(current_user.id)
     parent_id = data.get("parent_id")
     post_id = data.get("post_id")
     content = data.get("content")
@@ -49,7 +49,7 @@ def get_comment(comment_id):
 @jwt_required()
 def delete_comment(comment_id):
     comment = Comment.get_or_404(comment_id)
-    user_id = int(get_jwt_identity())
+    user_id = int(current_user.id)
 
     if user_id != comment.author_id:
         return (
@@ -81,7 +81,7 @@ def comment_vote(comment_id):
     if comment.content == "[Comment Deleted]":
         return jsonify({"error": "cannot vote for a deleted comment"}), 400
 
-    user_id = get_jwt_identity()
+    user_id = int(current_user.id)
     user = User.query.get_or_404(user_id)
     vote = CommentVote.query.filter_by(user_id=user_id, comment_id=comment_id).first()
 

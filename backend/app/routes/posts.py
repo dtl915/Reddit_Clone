@@ -1,5 +1,5 @@
 from flask import request, Blueprint, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, current_user
 from app import db
 from app.models import Community, Post, User, Comment, PostVote
 from sqlalchemy.exc import IntegrityError
@@ -13,7 +13,7 @@ bp = Blueprint("posts", __name__, url_prefix="/posts")
 def create_post():
     data = request.get_json(silent=True) or {}
     community_id = data.get("community_id")
-    author_id = int(get_jwt_identity())
+    author_id = int(current_user.id)
     title = data.get("title")
     content = data.get("content")
     if community_id is None:
@@ -40,7 +40,7 @@ def get_post(post_id):
 @bp.route("/<int:post_id>", methods=["DELETE"])
 @jwt_required()
 def delete_post(post_id):
-    user_id = int(get_jwt_identity())
+    user_id = int(current_user.id)
     post = Post.get_or_404(post_id)
 
     if user_id != post.author_id:
@@ -78,15 +78,11 @@ def post_vote(post_id):
     if value not in [1, 0, -1]:
         return jsonify({"error": "the value of 'value' is invalid"}), 400
 
-    # value = int(value)
-
     post = Post.get_or_404(post_id)
-    user_id = get_jwt_identity()
-    user = User.query.get_or_404(user_id)
-    vote = PostVote.query.filter_by(user_id=user_id, post_id=post_id).first()
+    vote = PostVote.query.filter_by(user_id=current_user.id, post_id=post_id).first()
 
     if vote is None:
-        new_vote = PostVote(user_id=user_id, post_id=post_id, value=value)
+        new_vote = PostVote(user_id=current_user.id, post_id=post_id, value=value)
         post.score += value
         db.session.add(new_vote)
         db.session.commit()
