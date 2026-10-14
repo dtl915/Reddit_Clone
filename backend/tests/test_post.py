@@ -1,7 +1,7 @@
 import pytest
 from flask.testing import FlaskClient
 from app import db
-from app.models import User
+from app.models import User, Post
 from flask import Flask
 from typing import Callable
 
@@ -110,25 +110,28 @@ def test_get_post_with_wrong_id(client: FlaskClient):
     assert response.status_code == 404
 
 
-def test_delete_existing_post(client: FlaskClient, post: dict, user: dict):
-    response = client.delete(f"/posts/{post["id"]}", headers=user["headers"])
+def test_delete_existing_post(app: Flask, client: FlaskClient, post: dict, user: dict):
+    response = client.delete(f"/posts/{post['id']}", headers=user["headers"])
     assert response.status_code == 204
+
+    with app.app_context():
+        assert db.session.get(Post, post["id"]) == None
 
 
 def test_delete_post_with_invalid_id(client: FlaskClient, user: dict):
-    response = response = client.delete(f"/posts/9999", headers=user["headers"])
+    response = client.delete(f"/posts/9999", headers=user["headers"])
     assert response.status_code == 404
 
 
-def test_delete_post_with_missing_header(client: FlaskClient):
-    response = client.delete(f"/posts/1")
+def test_delete_post_with_missing_header(client: FlaskClient, post: dict):
+    response = client.delete(f"/posts/{post['id']}")
     assert response.status_code == 401
     assert response.get_json()["error"] == "authentication required"
 
 
-def test_delete_post_with_invalid_header(client: FlaskClient):
+def test_delete_post_with_invalid_header(client: FlaskClient, post: dict):
     response = client.delete(
-        f"/posts/1", headers={"Authorization": "Bearer wrong_token"}
+        f"/posts/{post['id']}", headers={"Authorization": "Bearer wrong_token"}
     )
     assert response.status_code == 401
     assert response.get_json()["error"] == "invalid token"
@@ -139,7 +142,8 @@ def test_delete_post_with_wrong_user(
 ):
     other = make_user("other")
     response = client.delete(f"/posts/{post['id']}", headers=other["headers"])
-    assert response.status_code == 400
+    assert response.status_code == 403
+    print(response.status_code)
     assert (
         response.get_json()["error"]
         == "you do not have the permission to delete this post"
