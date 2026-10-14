@@ -65,7 +65,7 @@ def login():
     ):
         return jsonify({"error": "email or password cannot be empty"}), 400
 
-    user = User.query.filter_by(email=email).first()
+    user = User.query.filter_by(email=email.strip()).first()
 
     if user is None:
         return jsonify({"error": "invalid email or password"}), 401
