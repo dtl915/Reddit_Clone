@@ -23,17 +23,15 @@ def create_post():
 
     author = User.query.get(author_id)
     if author is None:
-        return jsonify({"error": "the account doesn’t exist"}), 401
-    community = Community.query.get(community_id)
-    if community is None:
-        return jsonify({"error": "the community doesn't exist"}), 401
+        return jsonify({"error": "the account doesn't exist"}), 401
+    community = Community.query.get_or_404(community_id)
     post = Post(
         community_id=community_id, author_id=author_id, title=title, content=content
     )
 
     db.session.add(post)
     db.session.commit()
-    return jsonify(post.to_dict()), 200
+    return jsonify(post.to_dict()), 201
 
 
 @bp.route("/<int:post_id>", methods=["GET"])
