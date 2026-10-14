@@ -23,8 +23,12 @@ def create_post():
     if title is None:
         return jsonify({"error": "title is empty"}), 400
 
-    author = User.query.get_or_404(author_id)
-    community = Community.get_or_404(community_id)
+    author = User.query.get(author_id)
+    if author is None:
+        return jsonify({"error": "the account doesn’t exist"}), 401
+    community = Community.query.get(community_id)
+    if community is None:
+        return jsonify({"error": "the community doesn't exist"}), 401
     post = Post(
         community_id=community_id, author_id=author_id, title=title, content=content
     )
