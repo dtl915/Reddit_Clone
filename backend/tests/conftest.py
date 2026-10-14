@@ -130,3 +130,16 @@ def post_payload(community: dict):
         "title": "test-post",
         "content": "test-content",
     }
+
+
+@pytest.fixture
+def post(client: FlaskClient, user: dict, community: dict):
+    post_payload = {
+        "community_id": community["id"],
+        "title": "test-post",
+        "content": "test-content",
+    }
+    response = client.post("/posts/", headers=user["headers"], json=post_payload)
+
+    assert response.status_code == 201
+    return response.get_json()
