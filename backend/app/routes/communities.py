@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, current_user
 from app import db
 from app.models import Community, User, Post
 from sqlalchemy.exc import IntegrityError
@@ -12,13 +12,9 @@ bp = Blueprint("communities", __name__, url_prefix="/communities")
 @jwt_required()
 def create_community():
     data = request.get_json(silent=True) or {}
-    creator_id = get_jwt_identity()
-    creator = User.query.filter_by(id=creator_id).first()
+    creator = current_user
     name = data.get("name")
     description = data.get("description")
-
-    if creator is None:
-        return jsonify({"error": "account not found"}), 400
 
     if name is None:
         return jsonify({"error": "name cannot be empty"}), 400
@@ -52,7 +48,7 @@ def get_community(community_id):
 @bp.route("/<int:community_id>", methods=["DELETE"])
 @jwt_required()
 def delete_community(community_id):
-    user_id = int(get_jwt_identity())
+    user_id = int(current_user.id)
     community = Community.get_or_404(community_id)
 
     if user_id != community.creator_id:
