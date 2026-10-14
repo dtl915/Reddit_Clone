@@ -121,3 +121,12 @@ def community(client: FlaskClient, user: dict):
     assert response.status_code == 201
 
     return response.get_json()
+
+
+@pytest.fixture
+def post_payload(community: dict):
+    return {
+        "community_id": community["id"],
+        "title": "test-post",
+        "content": "test-content",
+    }
