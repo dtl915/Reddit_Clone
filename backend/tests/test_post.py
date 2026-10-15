@@ -3,7 +3,9 @@ from flask.testing import FlaskClient
 from app import db
 from app.models import User, Post
 from flask import Flask
-from typing import Callable
+from typing import Callable, Any
+
+MISSING = object()
 
 
 def test_create_post_with_correct_header(
@@ -67,10 +69,16 @@ def test_create_post_with_wrong_header(
     assert response.get_json()["error"] == "invalid token"
 
 
-def test_create_post_with_missing_title(
-    client: FlaskClient, community: dict, user: dict, post_payload: dict
+@pytest.mark.parametrize(
+    "bad_val", [MISSING, "", "  ", 123], ids=["missing", "empty", "space", "wrong type"]
+)
+def test_create_post_with_bad_title(
+    client: FlaskClient, community: dict, user: dict, post_payload: dict, bad_val: str
 ):
-    del post_payload["title"]
+    if bad_val is MISSING:
+        del post_payload["title"]
+    else:
+        post_payload["title"] = bad_val
     response = client.post("/posts/", headers=user["headers"], json=post_payload)
 
     assert response.status_code == 400
