@@ -1,7 +1,6 @@
 from flask import jsonify, request, Blueprint
 from flask_jwt_extended import jwt_required, current_user
-from sqlalchemy.exc import IntegrityError
-from app.models import User, Community, Post, Comment, CommentVote
+from app.models import User, Post, Comment, CommentVote
 from app import db
 
 bp = Blueprint("comments", __name__, url_prefix="/comments")

@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, current_user
 from app import db
-from app.models import Community, User, Post
+from app.models import Community, Post
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
