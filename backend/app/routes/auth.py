@@ -1,12 +1,10 @@
 import bcrypt as bc
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (
-    JWTManager,
     create_access_token,
     jwt_required,
     current_user,
 )
-from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 from app.models import User
 from app import db
