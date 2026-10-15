@@ -27,10 +27,18 @@ def test_create_post_with_correct_header(
     assert data["author"] == user["username"]
 
 
+@pytest.mark.parametrize(
+    "bad_val",
+    [MISSING, "", "   ", True],
+    ids=["does not exist", "empty", "space", "boolean"],
+)
 def test_create_post_with_missing_community_id(
-    client: FlaskClient, user: dict, post_payload: dict
+    client: FlaskClient, user: dict, post_payload: dict, bad_val: str
 ):
-    del post_payload["community_id"]
+    if bad_val is MISSING:
+        del post_payload["community_id"]
+    else:
+        post_payload["community_id"] = bad_val
 
     response = client.post("/posts/", headers=user["headers"], json=post_payload)
 
@@ -88,7 +96,6 @@ def test_create_post_with_bad_title(
 def test_create_post_with_removed_author(
     app: Flask,
     client: FlaskClient,
-    community: dict,
     make_user: Callable[[str], dict],
     post_payload: dict,
 ):
@@ -105,6 +112,36 @@ def test_create_post_with_removed_author(
 
     assert response.status_code == 401
     assert response.get_json()["error"] == "the account doesn't exist"
+
+
+@pytest.mark.parametrize(
+    "bad_val", [MISSING, "", "   "], ids=["missing", "empty", "space"]
+)
+def create_post_with_empty_content(
+    app: Flask, client: FlaskClient, user: dict, post_payload: dict, bad_val
+):
+    if bad_val == MISSING:
+        del post_payload["content"]
+    else:
+        post_payload["content"] = bad_val
+    response = client.post("/posts/", headers=user["headers"], json=post_payload)
+    assert response.status_code == 201
+
+    with app.app_context():
+        post_created = db.session.get(Post, response.get_json()["id"])
+        assert post_created is not None
+        assert post_created.content is None
+
+
+@pytest.mark.parametrize("bad_val", [123, {}, True], ids=["int", "dict", "bool"])
+def create_post_with_bad_content(
+    app: Flask, client: FlaskClient, user: dict, post_payload: dict, bad_val
+):
+
+    post_payload["content"] = bad_val
+    response = client.post("/posts/", headers=user["headers"], json=post_payload)
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "invalid content"
 
 
 def test_get_post_with_correct_id(client: FlaskClient, post: dict):
