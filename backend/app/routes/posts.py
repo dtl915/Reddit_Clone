@@ -14,17 +14,19 @@ def create_post():
     community_id = data.get("community_id")
     author_id = int(current_user.id)
     title = data.get("title")
-    content = data.get("content")
+    content = data.get("content", "")
     if not isinstance(community_id, int) or isinstance(community_id, bool):
         return jsonify({"error": "community_id is empty"}), 400
     if not isinstance(title, str) or not title.strip():
         return jsonify({"error": "title is empty"}), 400
     if not isinstance(content, str):
         return jsonify({"error": "invalid content"}), 400
-
     community = Community.query.get_or_404(community_id)
     post = Post(
-        community_id=community_id, author_id=author_id, title=title, content=content
+        community_id=community_id,
+        author_id=author_id,
+        title=title,
+        content=content if content.strip() else None,
     )
 
     db.session.add(post)
