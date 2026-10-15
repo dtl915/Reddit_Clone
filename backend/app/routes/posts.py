@@ -17,7 +17,7 @@ def create_post():
     content = data.get("content")
     if community_id is None:
         return jsonify({"error": "community_id is empty"}), 400
-    if title is None:
+    if not isinstance(title, str) or not title.strip():
         return jsonify({"error": "title is empty"}), 400
 
     community = Community.query.get_or_404(community_id)
