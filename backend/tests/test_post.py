@@ -123,22 +123,26 @@ def test_delete_post_with_invalid_id(client: FlaskClient, user: dict):
     assert response.status_code == 404
 
 
-def test_delete_post_with_missing_header(client: FlaskClient, post: dict):
+def test_delete_post_with_missing_header(client: FlaskClient, post: dict, user: dict):
     response = client.delete(f"/posts/{post['id']}")
     assert response.status_code == 401
     assert response.get_json()["error"] == "authentication required"
+    get_response = client.get(f"/posts/{post['id']}", headers=user["headers"])
+    assert get_response.status_code == 200
 
 
-def test_delete_post_with_invalid_header(client: FlaskClient, post: dict):
+def test_delete_post_with_invalid_header(client: FlaskClient, post: dict, user: dict):
     response = client.delete(
         f"/posts/{post['id']}", headers={"Authorization": "Bearer wrong_token"}
     )
     assert response.status_code == 401
     assert response.get_json()["error"] == "invalid token"
+    get_response = client.get(f"/posts/{post['id']}", headers=user["headers"])
+    assert get_response.status_code == 200
 
 
 def test_delete_post_with_wrong_user(
-    client: FlaskClient, post: dict, make_user: Callable[[str], dict]
+    client: FlaskClient, post: dict, make_user: Callable[[str], dict], user: dict
 ):
     other = make_user("other")
     response = client.delete(f"/posts/{post['id']}", headers=other["headers"])
@@ -148,3 +152,6 @@ def test_delete_post_with_wrong_user(
         response.get_json()["error"]
         == "you do not have the permission to delete this post"
     )
+
+    get_response = client.get(f"/posts/{post['id']}", headers=user["headers"])
+    assert get_response.status_code == 200
