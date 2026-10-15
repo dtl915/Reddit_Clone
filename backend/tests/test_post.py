@@ -30,9 +30,9 @@ def test_create_post_with_correct_header(
 @pytest.mark.parametrize(
     "bad_val",
     [MISSING, "", "   ", True],
-    ids=["does not exist", "empty", "space", "boolean"],
+    ids=["missing", "empty", "space", "boolean"],
 )
-def test_create_post_with_missing_community_id(
+def test_create_post_with_bad_community_id(
     client: FlaskClient, user: dict, post_payload: dict, bad_val: Any
 ):
     if bad_val is MISSING:
@@ -78,7 +78,9 @@ def test_create_post_with_wrong_header(
 
 
 @pytest.mark.parametrize(
-    "bad_val", [MISSING, "", "  ", 123], ids=["missing", "empty", "space", "wrong type"]
+    "bad_val",
+    [MISSING, "", "  ", 123, {}, True],
+    ids=["missing", "empty", "space", "wrong type", "dict", "bool"],
 )
 def test_create_post_with_bad_title(
     client: FlaskClient, community: dict, user: dict, post_payload: dict, bad_val: Any
@@ -145,49 +147,48 @@ def test_create_post_with_bad_content(
 
 
 def test_get_post_with_correct_id(client: FlaskClient, post: dict):
-    response = client.get(f"/posts/{post["id"]}")
+    response = client.get(f"/posts/{post['id']}")
     assert response.status_code == 200
     assert post == response.get_json()
 
 
 def test_get_post_with_wrong_id(client: FlaskClient):
-    response = client.get(f"/posts/9999")
+    response = client.get("/posts/9999")
     assert response.status_code == 404
 
 
 def test_delete_existing_post(app: Flask, client: FlaskClient, post: dict, user: dict):
     response = client.delete(f"/posts/{post['id']}", headers=user["headers"])
     assert response.status_code == 204
-
     with app.app_context():
-        assert db.session.get(Post, post["id"]) == None
+        assert db.session.get(Post, post["id"]) is None
 
 
 def test_delete_post_with_invalid_id(client: FlaskClient, user: dict):
-    response = client.delete(f"/posts/9999", headers=user["headers"])
+    response = client.delete("/posts/9999", headers=user["headers"])
     assert response.status_code == 404
 
 
-def test_delete_post_with_missing_header(client: FlaskClient, post: dict, user: dict):
+def test_delete_post_with_missing_header(client: FlaskClient, post: dict):
     response = client.delete(f"/posts/{post['id']}")
     assert response.status_code == 401
     assert response.get_json()["error"] == "authentication required"
-    get_response = client.get(f"/posts/{post['id']}", headers=user["headers"])
+    get_response = client.get(f"/posts/{post['id']}")
     assert get_response.status_code == 200
 
 
-def test_delete_post_with_invalid_header(client: FlaskClient, post: dict, user: dict):
+def test_delete_post_with_invalid_header(client: FlaskClient, post: dict):
     response = client.delete(
         f"/posts/{post['id']}", headers={"Authorization": "Bearer wrong_token"}
     )
     assert response.status_code == 401
     assert response.get_json()["error"] == "invalid token"
-    get_response = client.get(f"/posts/{post['id']}", headers=user["headers"])
+    get_response = client.get(f"/posts/{post['id']}")
     assert get_response.status_code == 200
 
 
 def test_delete_post_with_wrong_user(
-    client: FlaskClient, post: dict, make_user: Callable[[str], dict], user: dict
+    client: FlaskClient, post: dict, make_user: Callable[[str], dict]
 ):
     other = make_user("other")
     response = client.delete(f"/posts/{post['id']}", headers=other["headers"])
@@ -197,5 +198,5 @@ def test_delete_post_with_wrong_user(
         == "you do not have the permission to delete this post"
     )
 
-    get_response = client.get(f"/posts/{post['id']}", headers=user["headers"])
+    get_response = client.get(f"/posts/{post['id']}")
     assert get_response.status_code == 200
