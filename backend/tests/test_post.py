@@ -33,7 +33,7 @@ def test_create_post_with_correct_header(
     ids=["does not exist", "empty", "space", "boolean"],
 )
 def test_create_post_with_missing_community_id(
-    client: FlaskClient, user: dict, post_payload: dict, bad_val: str
+    client: FlaskClient, user: dict, post_payload: dict, bad_val: Any
 ):
     if bad_val is MISSING:
         del post_payload["community_id"]
@@ -81,7 +81,7 @@ def test_create_post_with_wrong_header(
     "bad_val", [MISSING, "", "  ", 123], ids=["missing", "empty", "space", "wrong type"]
 )
 def test_create_post_with_bad_title(
-    client: FlaskClient, community: dict, user: dict, post_payload: dict, bad_val: str
+    client: FlaskClient, community: dict, user: dict, post_payload: dict, bad_val: Any
 ):
     if bad_val is MISSING:
         del post_payload["title"]
@@ -117,10 +117,10 @@ def test_create_post_with_removed_author(
 @pytest.mark.parametrize(
     "bad_val", [MISSING, "", "   "], ids=["missing", "empty", "space"]
 )
-def create_post_with_empty_content(
-    app: Flask, client: FlaskClient, user: dict, post_payload: dict, bad_val
+def test_create_post_with_empty_content(
+    app: Flask, client: FlaskClient, user: dict, post_payload: dict, bad_val: Any
 ):
-    if bad_val == MISSING:
+    if bad_val is MISSING:
         del post_payload["content"]
     else:
         post_payload["content"] = bad_val
@@ -134,8 +134,8 @@ def create_post_with_empty_content(
 
 
 @pytest.mark.parametrize("bad_val", [123, {}, True], ids=["int", "dict", "bool"])
-def create_post_with_bad_content(
-    app: Flask, client: FlaskClient, user: dict, post_payload: dict, bad_val
+def test_create_post_with_bad_content(
+    app: Flask, client: FlaskClient, user: dict, post_payload: dict, bad_val: Any
 ):
 
     post_payload["content"] = bad_val
@@ -192,7 +192,6 @@ def test_delete_post_with_wrong_user(
     other = make_user("other")
     response = client.delete(f"/posts/{post['id']}", headers=other["headers"])
     assert response.status_code == 403
-    print(response.status_code)
     assert (
         response.get_json()["error"]
         == "you do not have the permission to delete this post"
