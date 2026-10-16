@@ -302,3 +302,13 @@ def test_post_new_vote_with_0_val(
             db.session.get(PostVote, {"user_id": user["id"], "post_id": post["id"]})
             is None
         )
+
+
+def test_vote_with_no_token(client: FlaskClient, post: dict):
+    response = vote(client, {"headers": {}}, post["id"], 1)
+    assert response.status_code == 401
+
+
+def test_vote_with_nonexistent_post(client: FlaskClient, user: dict):
+    response = vote(client, user, 9999, 1)
+    assert response.status_code == 404
