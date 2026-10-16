@@ -288,3 +288,16 @@ def test_post_vote_with_missing_val(
         assert response.get_json()["error"] == "value of this vote is missing"
         assert score_before is not None and score_after is not None
         assert score_before.value == score_after.value
+
+
+def test_post_new_vote_with_0_val(
+    app: Flask, client: FlaskClient, user: dict, post: dict
+):
+
+    response = vote(client, user, post_id=post["id"], value=0)
+    assert response.status_code == 200
+    with app.app_context():
+        assert (
+            db.session.get(PostVote, {"user_id": user["id"], "post_id": post["id"]})
+            is None
+        )
