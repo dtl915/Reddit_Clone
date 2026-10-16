@@ -78,7 +78,7 @@ def post_vote(post_id):
     if value is None:
         return jsonify({"error": "value of this vote is missing"}), 400
 
-    if value not in [1, 0, -1]:
+    if value not in [1, 0, -1] or isinstance(value, bool) or isinstance(value, float):
         return jsonify({"error": "the value of 'value' is invalid"}), 400
 
     post = Post.get_or_404(post_id)
