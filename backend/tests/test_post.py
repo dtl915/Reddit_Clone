@@ -1,11 +1,17 @@
 import pytest
 from flask.testing import FlaskClient
 from app import db
-from app.models import User, Post
+from app.models import User, Post, PostVote
 from flask import Flask
 from typing import Callable, Any
 
 MISSING = object()
+
+
+def vote(client: FlaskClient, user: dict, post_id: int, value: int):
+    return client.post(
+        f"/posts/{str(post_id)}/vote", headers=user["headers"], json={"value": value}
+    )
 
 
 def test_create_post_with_correct_header(
@@ -200,3 +206,85 @@ def test_delete_post_with_wrong_user(
 
     get_response = client.get(f"/posts/{post['id']}")
     assert get_response.status_code == 200
+
+
+def test_post_vote_like_dislike_cancel(
+    app: Flask, client: FlaskClient, post: dict, make_user: Callable[[str], dict]
+):
+    user_lst = [make_user(f"user_{i}") for i in range(3)]
+
+    for vote_user, score in zip(user_lst, [1, 2, 3]):
+        response = vote(client, vote_user, post_id=post["id"], value=1)
+        assert response.status_code == 201
+        assert response.get_json()["score"] == score
+
+    for vote_user, score in zip(user_lst, [3, 3, 3]):
+        response = vote(client, vote_user, post_id=post["id"], value=1)
+        assert response.status_code == 200
+        assert response.get_json()["score"] == score
+
+    for vote_user, score in zip(user_lst, [1, -1, -3]):
+        response = vote(client, vote_user, post_id=post["id"], value=-1)
+        assert response.status_code == 200
+        assert response.get_json()["score"] == score
+
+    for vote_user, score in zip(user_lst, [-2, -1, 0]):
+        response = vote(client, vote_user, post_id=post["id"], value=0)
+        assert response.status_code == 200
+        assert response.get_json()["score"] == score
+
+        with app.app_context():
+            assert (
+                db.session.get(
+                    PostVote, {"user_id": vote_user["id"], "post_id": post["id"]}
+                )
+                is None
+            )
+
+
+@pytest.mark.parametrize(
+    "bad_val",
+    [1.0, "1", 100, True, 2, -2, 1.1, "abc"],
+    ids=["float", "str", "large int", "bool", "upper-edge", "lower-edge", "1.1", "abc"],
+)
+def test_post_vote_with_bad_val(
+    app: Flask, client: FlaskClient, user: dict, post: dict, bad_val: Any
+):
+    assert vote(client, user, post["id"], 1).status_code == 201
+    with app.app_context():
+        score_before = db.session.get(
+            PostVote, {"user_id": user["id"], "post_id": post["id"]}
+        )
+    response = vote(client, user, post["id"], bad_val)
+
+    with app.app_context():
+        score_after = db.session.get(
+            PostVote, {"user_id": user["id"], "post_id": post["id"]}
+        )
+        assert response.status_code == 400
+        assert response.get_json()["error"] == "the value of 'value' is invalid"
+        assert score_before is not None and score_after is not None
+        assert score_before.value == score_after.value
+
+
+def test_post_vote_with_missing_val(
+    app: Flask, client: FlaskClient, user: dict, post: dict
+):
+    assert vote(client, user, post["id"], 1).status_code == 201
+
+    with app.app_context():
+        score_before = db.session.get(
+            PostVote, {"user_id": user["id"], "post_id": post["id"]}
+        )
+    response = client.post(
+        f"/posts/{post['id']}/vote", json={}, headers=user["headers"]
+    )
+
+    with app.app_context():
+        score_after = db.session.get(
+            PostVote, {"user_id": user["id"], "post_id": post["id"]}
+        )
+        assert response.status_code == 400
+        assert response.get_json()["error"] == "value of this vote is missing"
+        assert score_before is not None and score_after is not None
+        assert score_before.value == score_after.value
