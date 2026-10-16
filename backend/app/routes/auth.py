@@ -1,5 +1,5 @@
 import bcrypt as bc
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from flask_jwt_extended import (
     create_access_token,
     jwt_required,
@@ -32,7 +32,7 @@ def register():
     username = username.strip()
     email = email.strip()
 
-    salt = bc.gensalt()
+    salt = bc.gensalt(rounds=current_app.config["BCRYPT_ROUNDS"])
     password_hash = bc.hashpw(password.encode("utf-8"), salt).decode("utf-8")
 
     user = User(username=username, email=email, password_hash=password_hash)

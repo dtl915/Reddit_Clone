@@ -15,6 +15,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get(DATABASE_ENV_VAR)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
+    BCRYPT_ROUNDS = 12
 
     @classmethod
     def check_env(cls) -> None:
@@ -29,6 +30,7 @@ class TestingConfig(Config):
     DATABASE_ENV_VAR = "TEST_DATABASE_URL"
     SQLALCHEMY_DATABASE_URI = os.environ.get(DATABASE_ENV_VAR)
     JWT_SECRET_KEY = "jwt-secret-key-for-tests"
+    BCRYPT_ROUNDS = 4
 
     @classmethod
     def check_env(cls) -> None:
