@@ -296,6 +296,7 @@ def test_post_new_vote_with_0_val(
 
     response = vote(client, user, post_id=post["id"], value=0)
     assert response.status_code == 200
+    assert response.get_json()["score"] == 0
     with app.app_context():
         assert (
             db.session.get(PostVote, {"user_id": user["id"], "post_id": post["id"]})

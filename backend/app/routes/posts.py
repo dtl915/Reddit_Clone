@@ -83,8 +83,9 @@ def post_vote(post_id):
 
     post = Post.get_or_404(post_id)
     vote = PostVote.query.filter_by(user_id=current_user.id, post_id=post_id).first()
-
-    if vote is None:
+    if vote is None and value == 0:
+        return jsonify({"score": post.score}), 200
+    elif vote is None:
         new_vote = PostVote(user_id=current_user.id, post_id=post_id, value=value)
         post.score += value
         db.session.add(new_vote)
