@@ -15,14 +15,13 @@ def create_comment():
     post_id = data.get("post_id")
     content = data.get("content")
 
-    if author_id is None:
-        return jsonify({"error": "author_id cannot be empty"}), 400
-    if post_id is None:
+    if not isinstance(post_id, int) or isinstance(post_id, bool):
         return jsonify({"error": "post_id cannot be empty"}), 400
-    if content is None:
+    if not isinstance(content, str) or not content.strip():
         return jsonify({"error": "content cannot be empty"}), 400
 
-    author = User.query.get_or_404(author_id)
+    content = content.strip()
+
     post = Post.get_or_404(post_id)
     if parent_id is not None:
         parent = Comment.get_or_404(comment_id=parent_id)
@@ -35,7 +34,7 @@ def create_comment():
 
     db.session.add(comment)
     db.session.commit()
-    return jsonify(comment.to_dict()), 200
+    return jsonify(comment.to_dict()), 201
 
 
 @bp.route("/<int:comment_id>", methods=["GET"])
@@ -73,15 +72,12 @@ def comment_vote(comment_id):
     if int(value) not in [1, 0, -1]:
         return jsonify({"error": "the value of 'value' is invalid"}), 400
 
-    # value = int(value)
-
     comment = Comment.get_or_404(comment_id)
 
     if comment.content == "[Comment Deleted]":
         return jsonify({"error": "cannot vote for a deleted comment"}), 400
 
     user_id = int(current_user.id)
-    user = User.query.get_or_404(user_id)
     vote = CommentVote.query.filter_by(user_id=user_id, comment_id=comment_id).first()
 
     if vote is None:
