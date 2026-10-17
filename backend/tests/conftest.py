@@ -143,3 +143,69 @@ def post(client: FlaskClient, user: dict, community: dict):
 
     assert response.status_code == 201
     return response.get_json()
+
+
+@pytest.fixture
+def make_post(client: FlaskClient) -> Callable[[int, dict], dict]:
+    """
+    make a post with following attributes:
+    - "community_id": community["id"]
+    - "title": "test-post{cnt}"
+    - "content": "test-content{cnt}"
+    """
+
+    counter = itertools.count()
+
+    def _make_post(community_id: int, headers: dict) -> dict:
+        cnt = next(counter)
+        post_payload = {
+            "community_id": community_id,
+            "title": f"test-post{cnt}",
+            "content": f"test-content{cnt}",
+        }
+
+        response = client.post("/posts/", headers=headers, json=post_payload)
+        assert response.status_code == 201
+        return response.get_json()
+
+    return _make_post
+
+
+@pytest.fixture
+def comment_payload(post: dict):
+    return {
+        "parent_id": None,
+        "post_id": post["id"],
+        "content": "test-comment",
+    }
+
+
+@pytest.fixture
+def comment(
+    client: FlaskClient,
+    user: dict,
+    comment_payload: dict,
+):
+    response = client.post(f"/comments/", headers=user["headers"], json=comment_payload)
+
+    assert response.status_code == 201
+    return response.get_json()
+
+
+@pytest.fixture
+def make_comment(client: FlaskClient) -> Callable[[int, int | None, dict], dict]:
+    counter = itertools.count()
+
+    def _make_comment(post_id: int, parent_id: int | None, headers: dict) -> dict:
+        cnt = next(counter)
+        payload = {
+            "parent_id": parent_id,
+            "post_id": post_id,
+            "content": f"test-comment{next(counter)}",
+        }
+
+        response = client.post("/comments/", headers=headers, json=payload)
+        assert response.status_code == 201
+        return response.get_json()
+
+    return _make_comment
