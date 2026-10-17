@@ -52,7 +52,7 @@ def delete_comment(comment_id):
     if user_id != comment.author_id:
         return (
             jsonify({"error": "you do not have the permission to delete this comment"}),
-            400,
+            403,
         )
 
     comment.content = "[Comment Deleted]"
