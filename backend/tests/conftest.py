@@ -194,6 +194,10 @@ def comment(
 
 @pytest.fixture
 def make_comment(client: FlaskClient) -> Callable[[int, int | None, dict], dict]:
+    """
+    make_comment(post_id: int, parent_id: int | None, headers: dict)
+    """
+
     counter = itertools.count()
 
     def _make_comment(post_id: int, parent_id: int | None, headers: dict) -> dict:

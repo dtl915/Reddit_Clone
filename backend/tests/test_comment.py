@@ -3,6 +3,7 @@ import pytest
 from flask import Flask
 from flask.testing import FlaskClient
 from app.models import Comment
+from app import db
 
 MISSING = object()
 
@@ -47,8 +48,24 @@ def test_create_comment_and_parent(
 @pytest.mark.parametrize("fields", ["post_id", "content"])
 @pytest.mark.parametrize(
     "value",
-    [MISSING, None, "", "  ", True, [], {}],
-    ids=["missing", "none", "empty", "whitespace", "bool", "list", "dict"],
+    [
+        MISSING,
+        None,
+        "",
+        "  ",
+        True,
+        [],
+        {},
+    ],
+    ids=[
+        "missing",
+        "none",
+        "empty",
+        "whitespace",
+        "bool",
+        "list",
+        "dict",
+    ],
 )
 def test_create_comment_with_bad_val(
     client: FlaskClient,
@@ -69,6 +86,35 @@ def test_create_comment_with_bad_val(
     assert response.get_json() == {"error": f"{fields} cannot be empty"}
 
 
+@pytest.mark.parametrize(
+    ("fields", "value"),
+    [
+        ("post_id", "1"),
+        ("post_id", "abc"),
+        ("content", 123),
+        ("parent_id", "abc"),
+        ("parent_id", "1"),
+        ("parent_id", ""),
+        ("parent_id", {}),
+        ("parent_id", True),
+        ("parent_id", []),
+    ],
+)
+def test_create_comment_with_wrong_type(
+    client: FlaskClient,
+    user: dict,
+    comment_payload: dict,
+    fields: str,
+    value: Any,
+):
+    payload = comment_payload.copy()
+    payload[fields] = value
+
+    response = client.post("/comments/", headers=user["headers"], json=payload)
+    assert response.status_code == 400
+    assert "error" in response.get_json()
+
+
 def test_create_comment_with_nonexisting_post(
     client: FlaskClient, user: dict, comment_payload: dict
 ):
@@ -82,6 +128,22 @@ def test_create_comment_with_missing_header(client: FlaskClient, comment_payload
     response = client.post("/comments/", json=comment_payload)
     assert response.status_code == 401
     assert response.get_json() == {"error": "authentication required"}
+
+
+def test_create_comment_with_missing_parent(
+    app: Flask, client: FlaskClient, user: dict, comment_payload: dict
+):
+
+    del comment_payload["parent_id"]
+    response = client.post("/comments/", headers=user["headers"], json=comment_payload)
+    assert response.status_code == 201
+
+    with app.app_context():
+        data = response.get_json()
+        comment = db.session.get(Comment, data["id"])
+        assert comment is not None
+        assert comment.parent_id is None
+        assert comment.content == comment_payload["content"]
 
 
 def test_create_comment_with_nonexisting_parent(
@@ -131,9 +193,24 @@ def test_get_nonexisting_comment(client: FlaskClient):
     assert response.status_code == 404
 
 
-def test_delete_comment(client: FlaskClient, user: dict, comment: dict):
+def test_delete_comment(
+    app: Flask,
+    client: FlaskClient,
+    user: dict,
+    post: dict,
+    make_comment: Callable[[int, int | None, dict], dict],
+):
+    comment = make_comment(post["id"], None, user["headers"])
+    child = make_comment(post["id"], comment["id"], user["headers"])
     response = client.delete(f"/comments/{comment['id']}", headers=user["headers"])
     assert response.status_code == 204
+    with app.app_context():
+        deleted_comment = db.session.get(Comment, comment["id"])
+        assert deleted_comment is not None
+        assert deleted_comment.content == "[Comment Deleted]"
+        child_comment = db.session.get(Comment, child["id"])
+        assert child_comment is not None
+        assert child_comment.content == child["content"]
 
 
 def test_delete_comment_with_nonexisting_comment(client: FlaskClient, user: dict):
@@ -142,7 +219,7 @@ def test_delete_comment_with_nonexisting_comment(client: FlaskClient, user: dict
 
 
 def test_delete_comment_with_wrong_header(
-    client: FlaskClient, comment: dict, make_user: Callable[[str], dict]
+    app: Flask, client: FlaskClient, comment: dict, make_user: Callable[[str], dict]
 ):
     other = make_user("other")
     response = client.delete(f"/comments/{comment['id']}", headers=other["headers"])
@@ -151,3 +228,8 @@ def test_delete_comment_with_wrong_header(
         response.get_json()["error"]
         == "you do not have the permission to delete this comment"
     )
+
+    with app.app_context():
+        unchanged_comment = db.session.get(Comment, comment["id"])
+        assert unchanged_comment is not None
+        assert unchanged_comment.content == comment["content"]
