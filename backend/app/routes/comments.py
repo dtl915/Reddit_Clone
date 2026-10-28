@@ -19,10 +19,13 @@ def create_comment():
         return jsonify({"error": "post_id cannot be empty"}), 400
     if not isinstance(content, str) or not content.strip():
         return jsonify({"error": "content cannot be empty"}), 400
-
+    if parent_id is not None and (
+        not isinstance(parent_id, int) or isinstance(parent_id, bool)
+    ):
+        return jsonify({"error": "type(parent_id) != int"}), 400
     content = content.strip()
 
-    post = Post.get_or_404(post_id)
+    Post.get_or_404(post_id)
     if parent_id is not None:
         parent = Comment.get_or_404(comment_id=parent_id)
         if post_id != parent.post_id:
