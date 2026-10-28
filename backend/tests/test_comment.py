@@ -130,6 +130,30 @@ def test_create_comment_with_missing_header(client: FlaskClient, comment_payload
     assert response.get_json() == {"error": "authentication required"}
 
 
+@pytest.mark.parametrize(
+    ("method", "route"), [("DELETE", "/comments/<id>"), ("POST", "/comments/<id>/vote")]
+)
+def test_comment_action_with_missing_header(
+    app: Flask, client: FlaskClient, comment: dict, method: str, route: str
+):
+
+    route = route.replace("<id>", str(comment["id"]))
+    response = None
+    if method == "DELETE":
+        response = client.delete(route, headers={}, json={"value": 1})
+    elif method == "POST":
+        response = client.post(route, headers={}, json={"value": 1})
+
+    assert response is not None
+    assert response.status_code == 401
+
+    with app.app_context():
+        unchanged_comment = db.session.get(Comment, comment["id"])
+        assert unchanged_comment is not None
+        assert unchanged_comment.content == comment["content"]
+        assert unchanged_comment.score == comment["score"]
+
+
 def test_create_comment_with_missing_parent(
     app: Flask, client: FlaskClient, user: dict, comment_payload: dict
 ):
