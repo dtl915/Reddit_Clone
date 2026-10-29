@@ -1,6 +1,7 @@
 from app import db
 from datetime import datetime, timezone
 from sqlalchemy.orm import joinedload
+from flask import abort
 
 
 class Community(db.Model):
@@ -25,7 +26,10 @@ class Community(db.Model):
 
     @classmethod
     def get_or_404(cls, community_id):
-        return cls.query.options(joinedload(cls.creator)).get_or_404(community_id)
+        community = db.session.get(cls, community_id, options=[joinedload(cls.creator)])
+        if community is None:
+            abort(404)
+        return community
 
     def to_dict(self):
         return {

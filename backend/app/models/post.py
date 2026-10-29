@@ -1,6 +1,7 @@
 from app import db
 from datetime import datetime, timezone
 from sqlalchemy.orm import joinedload
+from flask import abort
 
 
 class Post(db.Model):
@@ -39,10 +40,13 @@ class Post(db.Model):
     )
 
     @classmethod
-    def get_or_404(cls, post_id):
-        return cls.query.options(
-            joinedload(cls.author), joinedload(cls.community)
-        ).get_or_404(post_id)
+    def get_or_404(cls, post_id: int):
+        post = db.session.get(
+            cls, post_id, options=[joinedload(cls.author), joinedload(cls.community)]
+        )
+        if post is None:
+            return abort(404)
+        return post
 
     def delete_cascade(self):
         from app.models.comment import Comment

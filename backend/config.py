@@ -29,7 +29,7 @@ class TestingConfig(Config):
     TESTING = True
     DATABASE_ENV_VAR = "TEST_DATABASE_URL"
     SQLALCHEMY_DATABASE_URI = os.environ.get(DATABASE_ENV_VAR)
-    JWT_SECRET_KEY = "jwt-secret-key-for-tests"
+    JWT_SECRET_KEY = "cb5df09a8ff3d7131bbc64cb6a580c32a7b24031bbbfe69a1d7276bc9c72488d"
     BCRYPT_ROUNDS = 4
 
     @classmethod

@@ -21,7 +21,7 @@ def create_post():
         return jsonify({"error": "title is empty"}), 400
     if not isinstance(content, str):
         return jsonify({"error": "invalid content"}), 400
-    community = Community.query.get_or_404(community_id)
+    community = Community.get_or_404(community_id)
     post = Post(
         community_id=community_id,
         author_id=author_id,
