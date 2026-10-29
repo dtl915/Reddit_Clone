@@ -1,5 +1,5 @@
 from app import db
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import joinedload
 
 
@@ -26,7 +26,9 @@ class Post(db.Model):
     title = db.Column(db.String, nullable=False)
     content = db.Column(db.Text)
     score = db.Column(db.Integer, default=0, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(
+        db.DateTime, default=datetime.now(timezone.utc), nullable=False
+    )
     community = db.relationship("Community")
     author = db.relationship("User")
 

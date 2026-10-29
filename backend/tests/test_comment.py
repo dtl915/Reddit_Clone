@@ -34,8 +34,8 @@ def test_create_comment_and_parent(
     data2 = response2.get_json()
 
     with app.app_context():
-        comment1 = Comment.query.get(data1["id"])
-        comment2 = Comment.query.get(data2["id"])
+        comment1 = db.session.get(Comment, data1["id"])
+        comment2 = db.session.get(Comment, data2["id"])
         assert comment1 is not None and comment2 is not None
         assert comment1.parent_id is None
         assert comment2.parent_id == comment1.id
