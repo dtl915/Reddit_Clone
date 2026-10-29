@@ -1,8 +1,9 @@
 from app import db
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import joinedload
-class Community(db.Model):
 
+
+class Community(db.Model):
     """
     - id: the unique id of this community
     - name: the name of this community
@@ -13,23 +14,25 @@ class Community(db.Model):
     """
 
     __tablename__ = "communities"
-    id = db.Column(db.Integer, primary_key = True)
-    name = db.Column (db.String, nullable = False)
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False)
     description = db.Column(db.Text)
-    creator_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)
-    created_at = db.Column(db.DateTime, default= datetime.utcnow, nullable= False)
+    creator_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(
+        db.DateTime, default=datetime.now(timezone.utc), nullable=False
+    )
     creator = db.relationship("User")
 
     @classmethod
-    def get_or_404(cls,community_id):
+    def get_or_404(cls, community_id):
         return cls.query.options(joinedload(cls.creator)).get_or_404(community_id)
 
     def to_dict(self):
         return {
-            "id":self.id,
-            "name":self.name,
-            "description":self.description,
-            "creator_id":self.creator_id,
-            "created_at":self.created_at.isoformat(),
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "creator_id": self.creator_id,
+            "created_at": self.created_at.isoformat(),
             "creator": self.creator.username,
         }

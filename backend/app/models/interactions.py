@@ -1,8 +1,8 @@
 from app import db
-from datetime import datetime
+from datetime import datetime, timezone
+
 
 class ViewHistory(db.Model):
-
     """
     - id: the unique id of this entry
     - user_id: the user id of the user who viewed the post
@@ -12,13 +12,15 @@ class ViewHistory(db.Model):
 
     __tablename__ = "view_history"
 
-    id=  db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False)
-    viewed_at = db.Column(db.DateTime, default = datetime.utcnow, nullable=False)
+    viewed_at = db.Column(
+        db.DateTime, default=datetime.now(timezone.utc), nullable=False
+    )
+
 
 class SavedPost(db.Model):
-
     """
     - user_id: the user who saved the post
     - post_id: the post being saved
@@ -28,11 +30,11 @@ class SavedPost(db.Model):
     __tablename__ = "saved_posts"
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
-    post_id = db.Column (db.Integer, db.ForeignKey("posts.id"), primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), primary_key=True)
     saved_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
-class HiddenPost(db.Model):
 
+class HiddenPost(db.Model):
     """
     - user_id: the user who hide the post
     - post_id: the post being hidden
@@ -42,6 +44,5 @@ class HiddenPost(db.Model):
     __tablename__ = "hidden_posts"
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
-    post_id = db.Column (db.Integer, db.ForeignKey("posts.id"), primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), primary_key=True)
     hidden_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
-

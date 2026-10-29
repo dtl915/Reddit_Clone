@@ -1,5 +1,6 @@
 from app import db
-from datetime import datetime
+from datetime import datetime, timezone
+
 
 class User(db.Model):
     """
@@ -9,22 +10,25 @@ class User(db.Model):
     - password_hash: hashed password
     - created_at: date the account is created
     """
+
     __tablename__ = "users"
-    id = db.Column(db.Integer, primary_key = True)
-    username = db.Column(db.String, unique= True, nullable = False)
-    email = db.Column(db.String, unique=True, nullable = False)
-    password_hash = db.Column(db.String, nullable = False)
-    created_at = db.Column(db.DateTime, default= datetime.utcnow, nullable =False)
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String, unique=True, nullable=False)
+    email = db.Column(db.String, unique=True, nullable=False)
+    password_hash = db.Column(db.String, nullable=False)
+    created_at = db.Column(
+        db.DateTime, default=datetime.now(timezone.utc), nullable=False
+    )
 
     def to_dict(self):
         return {
-            "id":self.id,
-            "username":self.username,
-            "created_at":self.created_at.isoformat(),
+            "id": self.id,
+            "username": self.username,
+            "created_at": self.created_at.isoformat(),
         }
-    
+
     def to_dict_private(self):
         return {
             **self.to_dict(),
-            "email":self.email,
+            "email": self.email,
         }

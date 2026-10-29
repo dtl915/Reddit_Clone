@@ -1,5 +1,5 @@
 from app import db
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class PostVote(db.Model):
@@ -14,7 +14,9 @@ class PostVote(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), primary_key=True)
     value = db.Column(db.Integer, nullable=False)
-    voted_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    voted_at = db.Column(
+        db.DateTime, default=datetime.now(timezone.utc), nullable=False
+    )
 
     def delete_cascade(self):
         db.session.delete(self)
@@ -33,7 +35,9 @@ class CommentVote(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
     comment_id = db.Column(db.Integer, db.ForeignKey("comments.id"), primary_key=True)
     value = db.Column(db.Integer, nullable=False)
-    voted_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    voted_at = db.Column(
+        db.DateTime, default=datetime.now(timezone.utc), nullable=False
+    )
 
     def delete_cascade(self):
         db.session.delete(self)
