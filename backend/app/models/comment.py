@@ -1,6 +1,7 @@
 from app import db
 from datetime import datetime, timezone
 from sqlalchemy.orm import joinedload
+from flask import abort
 
 
 class Comment(db.Model):
@@ -58,4 +59,7 @@ class Comment(db.Model):
 
     @classmethod
     def get_or_404(cls, comment_id):
-        return cls.query.options(joinedload(cls.author)).get_or_404(comment_id)
+        comment = db.session.get(cls, comment_id, options=[joinedload(cls.author)])
+        if comment is None:
+            abort(404)
+        return comment
