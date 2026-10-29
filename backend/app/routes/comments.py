@@ -72,7 +72,7 @@ def comment_vote(comment_id):
     if value is None:
         return jsonify({"error": "value of this vote is missing"}), 400
 
-    if int(value) not in [1, 0, -1]:
+    if not isinstance(value, int) or isinstance(value, bool) or value not in [1, 0, -1]:
         return jsonify({"error": "the value of 'value' is invalid"}), 400
 
     comment = Comment.get_or_404(comment_id)
@@ -83,6 +83,8 @@ def comment_vote(comment_id):
     user_id = int(current_user.id)
     vote = CommentVote.query.filter_by(user_id=user_id, comment_id=comment_id).first()
 
+    if vote is None and value == 0:
+        return jsonify({"score": comment.score}), 200
     if vote is None:
         new_vote = CommentVote(user_id=user_id, comment_id=comment_id, value=value)
         comment.score += value
