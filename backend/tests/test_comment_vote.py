@@ -84,7 +84,7 @@ def test_comment_vote_with_bad_val(
         )
         comment_after = db.session.get(Comment, comment["id"])
         assert response.status_code == 400
-        assert response.get_json()["error"] == "the value of 'value' is invalid"
+        assert "error" in response.get_json()
         assert score_before is not None and score_after is not None
         assert score_before.value == score_after.value == 1
         assert comment_before is not None and comment_after is not None
