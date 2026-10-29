@@ -146,7 +146,7 @@ def test_comment_action_with_missing_header(
 
     assert response is not None
     assert response.status_code == 401
-
+    assert "error" in response.get_json()
     with app.app_context():
         unchanged_comment = db.session.get(Comment, comment["id"])
         assert unchanged_comment is not None

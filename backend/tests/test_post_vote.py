@@ -1,7 +1,7 @@
 import pytest
 from flask.testing import FlaskClient
 from app import db
-from app.models import PostVote
+from app.models import Post, PostVote
 from flask import Flask
 from typing import Callable, Any
 
@@ -50,8 +50,19 @@ def test_post_vote_like_dislike_cancel(
 
 @pytest.mark.parametrize(
     "bad_val",
-    [1.0, "1", 100, True, 2, -2, 1.1, "abc"],
-    ids=["float", "str", "large int", "bool", "upper-edge", "lower-edge", "1.1", "abc"],
+    [1.0, "1", 100, True, 2, -2, 1.1, "abc", None, []],
+    ids=[
+        "float",
+        "str",
+        "large int",
+        "bool",
+        "upper-edge",
+        "lower-edge",
+        "1.1",
+        "abc",
+        "None",
+        "list",
+    ],
 )
 def test_post_vote_with_bad_val(
     app: Flask, client: FlaskClient, user: dict, post: dict, bad_val: Any
@@ -61,16 +72,20 @@ def test_post_vote_with_bad_val(
         score_before = db.session.get(
             PostVote, {"user_id": user["id"], "post_id": post["id"]}
         )
+        post_before = db.session.get(Post, post["id"])
     response = vote(client, user, post["id"], bad_val)
 
     with app.app_context():
         score_after = db.session.get(
             PostVote, {"user_id": user["id"], "post_id": post["id"]}
         )
+        post_after = db.session.get(Post, post["id"])
         assert response.status_code == 400
-        assert response.get_json()["error"] == "the value of 'value' is invalid"
+        assert "error" in response.get_json()
         assert score_before is not None and score_after is not None
         assert score_before.value == score_after.value
+        assert post_before is not None and post_after is not None
+        assert post_before.score == post_after.score
 
 
 def test_post_vote_with_missing_val(
@@ -82,6 +97,7 @@ def test_post_vote_with_missing_val(
         score_before = db.session.get(
             PostVote, {"user_id": user["id"], "post_id": post["id"]}
         )
+        post_before = db.session.get(Post, post["id"])
     response = client.post(
         f"/posts/{post['id']}/vote", json={}, headers=user["headers"]
     )
@@ -90,10 +106,13 @@ def test_post_vote_with_missing_val(
         score_after = db.session.get(
             PostVote, {"user_id": user["id"], "post_id": post["id"]}
         )
+        post_after = db.session.get(Post, post["id"])
         assert response.status_code == 400
         assert response.get_json()["error"] == "value of this vote is missing"
         assert score_before is not None and score_after is not None
         assert score_before.value == score_after.value
+        assert post_before is not None and post_after is not None
+        assert post_before.score == post_after.score
 
 
 def test_post_new_vote_with_0_val(

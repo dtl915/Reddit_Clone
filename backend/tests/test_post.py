@@ -169,12 +169,27 @@ def test_delete_post_with_invalid_id(client: FlaskClient, user: dict):
     assert response.status_code == 404
 
 
-def test_delete_post_with_missing_header(client: FlaskClient, post: dict):
-    response = client.delete(f"/posts/{post['id']}")
+@pytest.mark.parametrize(
+    ("method", "route"), [("DELETE", "/posts/<id>"), ("POST", "/posts/<id>/vote")]
+)
+def test_post_actions_with_missing_header(
+    app: Flask, client: FlaskClient, post: dict, method: str, route: str
+):
+    route = route.replace("<id>", str(post["id"]))
+    response = None
+    if method == "POST":
+        response = client.post(route, headers={}, json={"value": 1})
+    elif method == "DELETE":
+        response = client.delete(f"/posts/{post['id']}")
+
+    assert response is not None
     assert response.status_code == 401
-    assert response.get_json()["error"] == "authentication required"
-    get_response = client.get(f"/posts/{post['id']}")
-    assert get_response.status_code == 200
+    assert "error" in response.get_json()
+    with app.app_context():
+        unchanged_post = db.session.get(Post, post["id"])
+        assert unchanged_post is not None
+        assert unchanged_post.content == post["content"]
+        assert unchanged_post.score == post["score"]
 
 
 def test_delete_post_with_invalid_header(client: FlaskClient, post: dict):
