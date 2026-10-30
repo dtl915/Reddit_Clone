@@ -213,3 +213,18 @@ def make_comment(client: FlaskClient) -> Callable[[int, int | None, dict], dict]
         return response.get_json()
 
     return _make_comment
+
+
+@pytest.fixture
+def community_payload() -> dict:
+    return {"name": "test_community", "description": "this is a community for test"}
+
+
+@pytest.fixture
+def community(client: FlaskClient, user: dict, community_payload: dict) -> dict:
+
+    response = client.post(
+        "/communities/", headers=user["headers"], json=community_payload
+    )
+    assert response.status_code == 201
+    return response.get_json()
