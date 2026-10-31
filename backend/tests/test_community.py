@@ -25,7 +25,7 @@ def test_create_community_success(
         assert community.description == community_payload["description"]
 
 
-@pytest.mark.parametrize("name", ["", "  ", MISSING])
+@pytest.mark.parametrize("name", [None, "", "  ", MISSING])
 def test_create_community_with_bad_name(
     app: Flask, client: FlaskClient, user: dict, community_payload: dict, name: str
 ):
@@ -88,7 +88,9 @@ def test_create_community_with_bad_val(
         assert len(community_lst) == 0
 
 
-@pytest.mark.parametrize("val", [None, "", "  "])
+@pytest.mark.parametrize(
+    "val", [None, "", "  ", MISSING], ids=["None", "empty str", "space", "Missing"]
+)
 def test_create_community_with_missing_description(
     app: Flask,
     client: FlaskClient,
@@ -96,7 +98,10 @@ def test_create_community_with_missing_description(
     community_payload: dict,
     val: str,
 ):
-    community_payload["description"] = val
+    if val is MISSING:
+        del community_payload["description"]
+    else:
+        community_payload["description"] = val
     response = client.post(
         "/communities/", headers=user["headers"], json=community_payload
     )
@@ -107,7 +112,10 @@ def test_create_community_with_missing_description(
         assert community is not None
         assert community.name == community_payload["name"]
         assert community.creator_id == user["id"]
-        assert community.description == community_payload["description"]
+        if val is MISSING or val is None:
+            assert community.description is None
+        else:
+            assert community.description == ""
 
 
 def test_get_and_list_community(client: FlaskClient, community: dict):
@@ -174,12 +182,16 @@ def test_delete_community_with_wrong_user(
 
 
 def test_actions_on_missing_header(
-    client: FlaskClient, community_payload: dict, user: dict
+    app: Flask, client: FlaskClient, community_payload: dict, user: dict
 ):
     response_create_fail = client.post(
         "/communities/", headers={}, json=community_payload
     )
     assert response_create_fail.status_code == 401
+
+    with app.app_context():
+        communities = db.session.query(Community).all()
+        assert len(communities) == 0
 
     response_create_success = client.post(
         "/communities/", headers=user["headers"], json=community_payload
@@ -190,3 +202,7 @@ def test_actions_on_missing_header(
         f"/communities/{response_create_success.get_json()["id"]}", headers={}
     )
     assert response_delete_fail.status_code == 401
+
+    with app.app_context():
+        communities = db.session.query(Community).all()
+        assert len(communities) == 1
