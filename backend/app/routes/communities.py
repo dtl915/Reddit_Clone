@@ -20,7 +20,8 @@ def create_community():
         return jsonify({"error": "name is invalid"}), 400
     if not isinstance(description, str) and not description is None:
         return jsonify({"error": "description is invalid"}), 400
-
+    elif isinstance(description, str):
+        description = description.strip()
     if name is None or not name.strip():
         return jsonify({"error": "name cannot be empty"}), 400
 
