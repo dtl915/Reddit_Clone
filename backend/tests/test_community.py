@@ -2,7 +2,7 @@ import pytest
 from flask.testing import FlaskClient
 from flask import Flask
 from app import db
-from app.models import Community
+from app.models import Community, Post
 from typing import Callable
 
 MISSING = object()
@@ -88,6 +88,28 @@ def test_create_community_with_bad_val(
         assert len(community_lst) == 0
 
 
+@pytest.mark.parametrize("val", [None, "", "  "])
+def test_create_community_with_missing_description(
+    app: Flask,
+    client: FlaskClient,
+    user: dict,
+    community_payload: dict,
+    val: str,
+):
+    community_payload["description"] = val
+    response = client.post(
+        "/communities/", headers=user["headers"], json=community_payload
+    )
+    assert response.status_code == 201
+    data = response.get_json()
+    with app.app_context():
+        community = db.session.get(Community, data["id"])
+        assert community is not None
+        assert community.name == community_payload["name"]
+        assert community.creator_id == user["id"]
+        assert community.description == community_payload["description"]
+
+
 def test_get_and_list_community(client: FlaskClient, community: dict):
     response_list_cm = client.get("/communities/")
     response_get_cm = client.get(f"/communities/{community["id"]}")
@@ -114,13 +136,23 @@ def test_actions_on_nonexisting_community(
     assert "error" in response.get_json()
 
 
-def test_delete_community(app: Flask, client: FlaskClient, user: dict, community: dict):
+def test_delete_community(
+    app: Flask,
+    client: FlaskClient,
+    user: dict,
+    community: dict,
+    make_post: Callable[[int, dict], dict],
+):
+    post = make_post(community["id"], user["headers"])
     response = client.delete(f"/communities/{community["id"]}", headers=user["headers"])
     assert response.status_code == 204
 
     with app.app_context():
         deleted_community = db.session.get(Community, community["id"])
         assert deleted_community is None
+
+        deleted_post = db.session.get(Post, post["id"])
+        assert deleted_post is None
 
 
 def test_delete_community_with_wrong_user(

@@ -110,20 +110,6 @@ def user(make_user: Callable[[str], dict]) -> dict:
 
 
 @pytest.fixture
-def community(client: FlaskClient, user: dict):
-
-    payload = {
-        "name": "test-community",
-        "description": "this is a test community",
-    }
-
-    response = client.post("/communities/", json=payload, headers=user["headers"])
-    assert response.status_code == 201
-
-    return response.get_json()
-
-
-@pytest.fixture
 def post_payload(community: dict):
     return {
         "community_id": community["id"],
