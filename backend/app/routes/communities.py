@@ -61,7 +61,7 @@ def delete_community(community_id):
             jsonify(
                 {"error": "you do not have the permission to delete this community"}
             ),
-            400,
+            403,
         )
 
     for post in Post.query.filter_by(community_id=community.id):
