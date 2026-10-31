@@ -16,7 +16,12 @@ def create_community():
     name = data.get("name")
     description = data.get("description")
 
-    if name is None:
+    if not isinstance(name, str):
+        return jsonify({"error": "name is invalid"}), 400
+    if not isinstance(description, str) and not description is None:
+        return jsonify({"error": "description is invalid"}), 400
+
+    if name is None or not name.strip():
         return jsonify({"error": "name cannot be empty"}), 400
 
     community = Community(name=name, description=description, creator_id=creator.id)
@@ -34,7 +39,7 @@ def create_community():
 def list_communities():
     communities = Community.query.all()
     return (
-        jsonify([community.to_dict() for ind, community in enumerate(communities)]),
+        jsonify([community.to_dict() for community in communities]),
         200,
     )
 
