@@ -38,7 +38,7 @@ def create_app(config_class: type[Config] | None = None):
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
-    CORS(app)
+    CORS(app, origins=app.config["CORS_ORIGINS"])
 
     @jwt.unauthorized_loader
     def missing_token_callback(reason):
