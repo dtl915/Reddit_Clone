@@ -98,7 +98,10 @@ class ProductionConfig(Config):
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    CORS_ORIGINS = ["http://localhost:5173"]
+    CORS_ORIGINS = parse_origins(os.environ.get("CORS_ORIGINS")) or [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
 
 
 CONFIGS: dict[str, type[Config]] = {
