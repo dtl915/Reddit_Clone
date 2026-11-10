@@ -70,6 +70,10 @@ def create_app(config_class: type[Config] | None = None):
     def method_not_allowed(e):
         return jsonify({"error": "method not allowed"}), 405
 
+    @app.errorhandler(500)
+    def internal_server_error(e):
+        return jsonify({"error": "internal server error"})
+
     import_bp(app)
 
     @app.route("/health")
