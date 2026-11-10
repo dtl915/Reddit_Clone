@@ -1,7 +1,10 @@
-.env
-.env.*
+**/.env
+**/.env.*
 .venv/
+.flaskenv
 
-.pytest_cache/
-__pycache__/
-*.pyc
+**/.pytest_cache/
+**/__pycache__/
+**/*.pyc
+
+tests/
