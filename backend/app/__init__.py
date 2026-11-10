@@ -72,7 +72,7 @@ def create_app(config_class: type[Config] | None = None):
 
     @app.errorhandler(500)
     def internal_server_error(e):
-        return jsonify({"error": "internal server error"})
+        return jsonify({"error": "internal server error"}), 500
 
     import_bp(app)
 
