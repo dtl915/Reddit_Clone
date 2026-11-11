@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16
+        image: postgres:18
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -42,3 +42,47 @@ jobs:
         run: pip install -r requirements-dev.txt
       - name: Run tests
         run: python -m pytest
+  migrate:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: production
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with: 
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+      - name: Generate JWT_SECRET_KEY
+        run: echo "JWT_SECRET_KEY=$(python -c 'import secrets; print(secrets.token_hex(32))')" >> "$GITHUB_ENV"
+      - name: Run Migrations
+        env:
+          MIGRATION_DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
+          APP_ENV: development
+        run: flask db upgrade
+
+  deploy:
+    needs: migrate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency: 
+      group: production
+      cancel-in-progress: false
+    steps:
+      - name: Trigger Render Hook
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: curl -fsS "$HOOK"
