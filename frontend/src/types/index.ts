@@ -4,12 +4,26 @@ export interface User {
     created_at: string;
 }
 
-export interface CurrentUser extends User {
+export interface LoginRequest {
+
     email: string;
+    password: string;
+}
+
+export interface RegisterRequest {
+    username: string;
+    email: string;
+    password: string;
+}
+
+export interface CurrentUser {
+    id: number;
+    email: string;
+    username: string;
 }
 
 export interface JWT {
-    access_token : string;
+    access_token: string;
 }
 
 export interface Community {
