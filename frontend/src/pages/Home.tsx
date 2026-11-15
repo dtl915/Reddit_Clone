@@ -15,8 +15,6 @@ export function Home() {
             try {
                 const data = await getFeed();
                 setPosts(data);
-                console.log(data);
-                console.log(posts);
             } catch (error) {
                 setError(error instanceof Error ? error.message : "Unknown Error");
             } finally {

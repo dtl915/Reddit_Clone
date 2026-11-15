@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { register } from "../api/register";
-import { getJWT } from "../api/login";
+import { register, login } from "../api/auth";
 import { useNavigate } from "react-router-dom";
 import { setToken } from "../api/tokenStorage";
 import "./Register.css";
@@ -27,16 +26,16 @@ export function Register() {
                     if (typeof username !== "string" || typeof email !== "string" || typeof password !== "string")
                         throw TypeError
 
-                    await register(username, email, password);
+                    await register({ username: username, email: email, password: password });
 
-                    const tokenRes = await getJWT(email, password);
+                    const tokenRes = await login({ email: email, password: password });
                     if (tokenRes.access_token) {
                         setToken(tokenRes.access_token);
                         navigate("/auth/me")
                     } else {
                         throw new Error("Login failed after registration");
                     }
-                } catch (error) {
+                } catch {
                     setError("Account created, but automatic login failed. Please log in.");
                 } finally {
                     setLoading(false);
