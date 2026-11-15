@@ -26,7 +26,7 @@ export function clearToken(): void {
         localStorage.removeItem(TOKEN_KEY);
     }
     catch (err) {
-        throw new Error("clearToken: failed to clear token", { cause: err })
+        throw new Error("clearToken: failed to clear token", { cause: err });
     }
 
 }
