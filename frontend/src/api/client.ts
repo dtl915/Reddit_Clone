@@ -1,19 +1,21 @@
+import { getToken } from "./tokenStorage";
+
 export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
     console.log("Fetching:");
     console.log(path);
     console.log(options);
     const url: string = import.meta.env.VITE_API_URL + path;
-    const token: string | null = localStorage.getItem("token");
-    const headers: Record <string, string> = {
-        "Content-Type":"application/json",
-        ... (options?.headers as Record <string, string>),
-        ...(token? {"Authorization" : `Bearer ${token}`} : {}),
+    const token: string | null = getToken();
+    const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        ... (options?.headers as Record<string, string>),
+        ...(token ? { "Authorization": `Bearer ${token}` } : {}),
     };
 
-    console.log({...options, headers});
+    console.log({ ...options, headers });
 
-    
-    const response = await fetch(url, {...options, headers});
+
+    const response = await fetch(url, { ...options, headers });
     if (!response.ok) {
         let message = response.statusText;
         try {
