@@ -2,6 +2,7 @@ import { useState } from "react";
 import { register } from "../api/register";
 import { getJWT } from "../api/login";
 import { useNavigate } from "react-router-dom";
+import { setToken } from "../api/tokenStorage";
 import "./Register.css";
 
 export function Register() {
@@ -30,7 +31,7 @@ export function Register() {
 
                     const tokenRes = await getJWT(email, password);
                     if (tokenRes.access_token) {
-                        localStorage.setItem("token", tokenRes.access_token)
+                        setToken(tokenRes.access_token);
                         navigate("/auth/me")
                     } else {
                         throw new Error("Login failed after registration");

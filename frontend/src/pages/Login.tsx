@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { getJWT } from "../api/login"
 import { useNavigate } from "react-router-dom";
+import { setToken } from "../api/tokenStorage";
 import "./Login.css";
 
 export function Login() {
@@ -29,7 +30,7 @@ export function Login() {
                 try {
                     const data = await getJWT(email, password);
                     if (data.access_token) {
-                        localStorage.setItem("token", data.access_token);
+                        setToken(data.access_token);
                         navigate("/auth/me");
                     }
                 } catch (error) {
