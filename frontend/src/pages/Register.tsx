@@ -26,7 +26,7 @@ export function Register() {
                     if (typeof username !== "string" || typeof email !== "string" || typeof password !== "string")
                         throw TypeError
 
-                    const data = await register(username, email, password);
+                    await register(username, email, password);
 
                     const tokenRes = await getJWT(email, password);
                     if (tokenRes.access_token) {
