@@ -2,7 +2,7 @@ import { getToken } from "./tokenStorage";
 const RAW_API_URL: string | undefined = import.meta.env.VITE_API_URL;
 if (!RAW_API_URL) throw new Error("VITE_API_URL is missing in frontend/.env");
 const API_URL = RAW_API_URL.replace(/\/+$/, "");
-
+const REQUEST_TIMEOUT_MS = 60_000;
 
 export class ApiError extends Error {
     statusCode: number;
@@ -19,13 +19,15 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
     const url: string = API_URL + path;
     const token: string | null = getToken();
     const headers = new Headers(options?.headers);
+    const default_signal = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
+    const signal = options?.signal ? AbortSignal.any([options.signal, default_signal]) : default_signal;
     if (options?.body && !headers.has("Content-Type")) { headers.set("Content-Type", "application/json"); }
     if (token !== null) { headers.set("Authorization", `Bearer ${token}`); }
 
     let response: Response;
 
     try {
-        response = await fetch(url, { ...options, headers });
+        response = await fetch(url, { ...options, headers, signal });
     } catch (err) {
         throw new ApiError("Could not reach the server", 0, { cause: err });
     }
