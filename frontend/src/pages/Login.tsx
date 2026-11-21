@@ -1,13 +1,13 @@
 import { useState } from "react"
-import { login } from "../api/auth"
 import { useNavigate } from "react-router-dom";
-import { setToken } from "../api/tokenStorage";
 import "./Login.css";
+import { useAuth } from "../auth/useAuth";
 
 export function Login() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     if (error)
         return <div className="auth-status auth-error">{error}</div>
@@ -28,11 +28,8 @@ export function Login() {
                 }
 
                 try {
-                    const data = await login({ email: email, password: password });
-                    if (data.access_token) {
-                        setToken(data.access_token);
-                        navigate("/auth/me");
-                    }
+                    await login({ email: email, password: password });
+                    navigate("/auth/me");
                 } catch (error) {
                     setError(error instanceof Error ? error.message : "Unkown Error");
                 } finally {
