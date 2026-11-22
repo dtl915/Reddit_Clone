@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { register, login } from "../api/auth";
+import { register } from "../api/auth";
 import { useNavigate } from "react-router-dom";
 import { setToken } from "../api/tokenStorage";
 import "./Register.css";
+import { useAuth } from "../auth/useAuth";
 
 export function Register() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate()
+
+    const { login } = useAuth();
     if (error)
         return <div className="auth-status auth-error">{error}</div>
     if (loading)
@@ -28,13 +31,9 @@ export function Register() {
 
                     await register({ username: username, email: email, password: password });
 
-                    const tokenRes = await login({ email: email, password: password });
-                    if (tokenRes.access_token) {
-                        setToken(tokenRes.access_token);
-                        navigate("/auth/me")
-                    } else {
-                        throw new Error("Login failed after registration");
-                    }
+                    login({ email: email, password: password });
+                    navigate("/auth/me");
+
                 } catch {
                     setError("Account created, but automatic login failed. Please log in.");
                 } finally {
