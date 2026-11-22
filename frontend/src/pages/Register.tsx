@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { register } from "../api/auth";
 import { useNavigate } from "react-router-dom";
-import { setToken } from "../api/tokenStorage";
 import "./Register.css";
 import { useAuth } from "../auth/useAuth";
+import { ApiError } from "../api/client";
 
 export function Register() {
     const [error, setError] = useState<string | null>(null);
@@ -11,31 +11,51 @@ export function Register() {
     const navigate = useNavigate()
 
     const { login } = useAuth();
-    if (error)
-        return <div className="auth-status auth-error">{error}</div>
-    if (loading)
-        return <div className="auth-status">Loading...</div>
-
     return <div className="auth-page">
         <title>Register</title>
         <div className="auth-card">
             <h1>Register</h1>
-            <form className="auth-form" action={async (formData: FormData) => {
+            <form className="auth-form" onSubmit={async (event) => {
+                event.preventDefault();
+                const formData = new FormData(event.currentTarget);
+                setLoading(true);
+                setError(null);
+                const username = formData.get("username")?.toString()?.trim();
+                const email = formData.get("email")?.toString()?.trim();
+                const password = formData.get("password")?.toString();
+                if (!username || !email || !password || !password.trim()) {
+                    setError("Please fill out all fields");
+                    setLoading(false);
+                    return;
+                }
+
+
                 try {
-                    const username = formData.get("username");
-                    const email = formData.get("email");
-                    const password = formData.get("password");
+                    await register({ username, email, password });
+                } catch (err) {
+                    if (err instanceof ApiError) {
+                        setError(err.message);
+                    }
+                    else {
+                        setError("Something went wrong. Please try again.");
+                        console.error(err);
+                    }
+                    setLoading(false);
+                    return;
+                }
 
-                    if (typeof username !== "string" || typeof email !== "string" || typeof password !== "string")
-                        throw TypeError
-
-                    await register({ username: username, email: email, password: password });
-
-                    login({ email: email, password: password });
+                try {
+                    await login({ email, password });
                     navigate("/auth/me");
+                } catch (err) {
+                    if (err instanceof ApiError) {
+                        setError("Your account is created, but logging failed (" + err.message + "). Please log in.");
+                    }
+                    else {
 
-                } catch {
-                    setError("Account created, but automatic login failed. Please log in.");
+                        setError("Your account is created, but logging failed (unknown error). Please log in.")
+                        console.error(err);
+                    }
                 } finally {
                     setLoading(false);
                 }
@@ -52,7 +72,8 @@ export function Register() {
                     <label htmlFor="password">Password</label>
                     <input type="password" id="password" name="password" />
                 </div>
-                <button type="submit" className="auth-submit">Register</button>
+                {error !== null && <div className="auth-form-error" role="alert">{error}</div>}
+                <button type="submit" disabled={loading} className="auth-submit">{loading ? "Loading..." : "Register"}</button>
             </form>
             <button className="auth-switch" onClick={() => {
                 navigate("/auth/login")
