@@ -17,5 +17,5 @@ export async function register(data: RegisterRequest): Promise<CurrentUser> {
 }
 
 export async function getMe(): Promise<CurrentUser> {
-    return apiFetch<CurrentUser>("/auth/me", { method: "GET" });
+    return apiFetch<CurrentUser>("/auth/me", { method: "GET", hasAuth: true });
 }

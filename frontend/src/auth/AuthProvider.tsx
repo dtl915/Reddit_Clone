@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { clearToken, getToken, setToken } from "../api/tokenStorage";
 import * as authApi from "../api/auth";
-import { ApiError } from "../api/client";
+import { ApiError, setUnauthorizedHandler } from "../api/client";
 import { AuthContext } from "./AuthContext";
 import type { CurrentUser, LoginRequest } from "../types";
 
@@ -34,6 +34,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loadMe();
 
     }, []);
+
+    useEffect(() => {
+        const unauthorize_handler = () => {
+            setUser(null);
+            clearToken();
+        }
+        setUnauthorizedHandler(unauthorize_handler);
+        return () => {
+            setUnauthorizedHandler(null);
+        }
+    }, [])
 
     async function login(data: LoginRequest) {
         const token = (await authApi.login(data)).access_token;
